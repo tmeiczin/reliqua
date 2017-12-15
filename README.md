@@ -79,6 +79,7 @@ app = Application(
 app.run()
 ```
 
+```
 Where:
 
 address:       ip address to listen to requests, 0.0.0.0 means any interface
@@ -87,6 +88,7 @@ workers:       number of worker threads to start
 host:          external hostname or ip address that is reachable from clients, used by swagger-ui
 base_path:     the api base path for the api, used by swagger-ui
 resource_path: this is where your python resource files are located
+```
 
 Refer to the example application for more examples. You can install the library and example application
 
