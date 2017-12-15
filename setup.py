@@ -15,7 +15,8 @@ setup(
     author='Terrence Meiczinger',
     author_email='terrence72@gmail.com',
     keywords='',
-    packages=find_packages(),
+    packages=find_packages(exclude=['contrib', 'docs', 'test*']),
+    include_package_data=True,
     install_requires=[
         'falcon>=1.1.0',
         'gunicorn>=19.6.0',
@@ -24,7 +25,7 @@ setup(
     data_files=[],
     entry_points={
         'console_scripts': [
-            'falcon-app=falcon_template.__main__:main'
+            'falcon-app=example.__main__:main'
         ],
     },
 )

@@ -13,6 +13,77 @@ users = [
 ]
 
 
+class User(Resource):
+
+    __schema__ = {
+        '/users/{id}': {
+            'get': {
+                'description': 'retrieve users',
+                'operationId': 'getUser',
+                'tags': [
+                    'users'
+                ],
+                'parameters': [
+                    {
+                        'name': 'id',
+                        'in': 'path',
+                        'description': 'User ID',
+                        'required': True,
+                        'type': 'string'
+                    },
+                ],
+                'responses': {
+                    '200': {
+                        'description': 'successful operation',
+                        'examples': {
+                            'application/json': {
+                                'results': [
+                                    {
+                                        'username': 'fred',
+                                        'email': 'fred@fake.com',
+                                    }
+                                ],
+                                'success': True,
+                            }
+                        }
+                    }
+                }
+            },
+            'delete': {
+                'description': 'Delete user',
+                'operationId': 'deleteUser',
+                'tags': [
+                    'users'
+                ],
+                'parameters': [
+                    {
+                        'name': 'id',
+                        'in': 'path',
+                        'description': 'user id',
+                        'required': True,
+                        'type': 'string'
+                    },
+                ],
+                'responses': {
+                    '400': {
+                        'description': 'Invalid input values'
+                    }
+                },
+            },
+        }
+    }
+
+    def on_get(self, req, resp, id=None):
+        resp.body = self.jsonify(users[int(id)])
+
+    def on_delete(self, req, resp, id=None):
+        try:
+            users.pop(int(id))
+            resp.body = self.jsonify({'success': True})
+        except IndexError:
+            resp.status = '400'
+
+
 class Users(Resource):
 
     __schema__ = {
@@ -70,36 +141,16 @@ class Users(Resource):
                         'type': 'string'
                     },
                     {
-                        'email': 'email',
+                        'name': 'email',
                         'in': 'query',
                         'description': 'user email address',
                         'required': True,
+                        'type': 'string'
                     }
                 ],
                 'responses': {
                     '405': {
                         'description': 'Invalid input'
-                    }
-                },
-            },
-            'delete': {
-                'description': 'Delete user',
-                'operationId': 'deleteUser',
-                'tags': [
-                    'users'
-                ],
-                'parameters': [
-                    {
-                        'name': 'id',
-                        'in': 'path',
-                        'description': 'user id',
-                        'required': True,
-                        'type': 'int'
-                    },
-                ],
-                'responses': {
-                    '400': {
-                        'description': 'Invalid input values'
                     }
                 },
             },
@@ -122,10 +173,5 @@ class Users(Resource):
 
     def on_post(self, req, resp):
         p = self.get_params(req)
-        result = p
-        resp.body = self.jsonify({'success': result})
-
-    def on_delete(self, req, resp):
-        p = self.get_params(req)
-        result = p
-        resp.body = self.jsonify({'success': result})
+        users.append(p)
+        resp.body = self.jsonify(len(users) - 1)

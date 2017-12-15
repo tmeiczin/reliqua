@@ -4,7 +4,6 @@ import imp
 import inspect
 import json
 import os
-import re
 import sys
 import uuid
 
@@ -16,12 +15,37 @@ from .resources.base import Resource
 class Application(BaseApplication):
     """create a standalone application"""
 
-    def __init__(self, app=None, address='127.0.0.1', port=8000, host=None, base_path=None, workers=1):
+    def __init__(
+            self,
+            address='127.0.0.1',
+            port=8000,
+            host=None,
+            base_path=None,
+            workers=1,
+            resource_path=None,
+            api=None):
+        """
+        Create a standalone API application
+
+        :param str address:       address to listen for requests
+        :param int port:          port to listen on
+        :param str host:          the hostname of the server (swagger)
+        :param str base_path:     base_path of the api (swagger)
+        :param int workers:       number of worker threads
+        :param str resource_path: path to the resource modules
+        :param Api api:           an api instance
+        :return:                  application instance
+        """
         self.options = {
             'bind': '%s:%s' % (address, port),
             'workers': workers
         }
-        self.application = app or Api(host='%s:%s' % (host, port), base_path=base_path)
+
+        self.application = api or Api(
+            host='%s:%s' % (host, port),
+            base_path=base_path,
+            resource_path=resource_path
+        )
         super(Application, self).__init__()
 
     def load_config(self):
@@ -35,13 +59,29 @@ class Application(BaseApplication):
 class Api(falcon.API):
     """add auto route and documentation"""
 
-    def __init__(self, cfg=None, resource_path=None, host=None, base_path=None):
+    def __init__(
+            self,
+            cfg=None,
+            resource_path=None,
+            host=None,
+            base_path=None):
+        """
+        Create an API instance
+
+        :param obj cfg:           gunicorn config
+        :param str resource_path: path to the resource modules
+        :param str host:          the hostname of the server (swagger)
+        :param str base_path:     base_path of the api (swagger)
+        :return:                  api instance
+        """
         self.host = host
         self.base_path = base_path
+        self.resource_path = resource_path
+        self.cfg = cfg
         self.url = 'http://%s/%s' % (
             self.host,
             self.base_path
-        ) 
+        )
 
         self.path = os.path.dirname(sys.modules[__name__].__file__)
         self.doc_path = self.path + '/swagger'
@@ -50,12 +90,6 @@ class Api(falcon.API):
             middleware=[]
         )
 
-        if not resource_path:
-            resource_path = self.path + '/resources'
-
-        self.resource_path = resource_path
-        self.cfg = cfg
-
         self._load_resources()
         self._add_routes()
         self._add_docs()
@@ -63,6 +97,7 @@ class Api(falcon.API):
     def _load_resources(self):
         self.resources = []
         files = glob.glob(self.resource_path + '/*.py')
+
         for f in files:
             module_name = str(uuid.uuid3(uuid.NAMESPACE_OID, f))
             module = imp.load_source(module_name, f)
@@ -108,7 +143,6 @@ class Swagger(object):
         self.path = path
 
     def on_get(self, req, resp):
-        resp.status = falcon.HTTP_200
         resp.content_type = 'text/html'
 
         with open(self.path + '/index.html', 'r') as f:
@@ -123,7 +157,6 @@ class SwaggerStatic(object):
         self.path = path
 
     def on_get(self, req, resp, filename):
-        resp.status = falcon.HTTP_200
         resp.content_type = 'text/html'
 
         if 'css' in filename:
@@ -138,11 +171,11 @@ class Docs(object):
     __schema__ = {
         'swagger': '2.0',
         'info': {
-            'description': 'application description',
-            'version': '0.0.0',
-            'title': 'application',
+            'description': '',
+            'version': '',
+            'title': '',
         },
-        'host': '127.0.0.1',
+        'host': '',
         'basePath': '',
         'schemes': [
             'http'
@@ -155,18 +188,21 @@ class Docs(object):
         ]
     }
 
-    def __init__(self, resources, desc=None, version=None, title=None, host=None, base_path=None):
+    def __init__(
+            self,
+            resources,
+            desc=None,
+            version=None,
+            title=None,
+            host=None,
+            base_path=None):
+
         self.resources = resources
-        if desc:
-            self.__schema__['info']['description'] = desc
-        if version:
-            self.__schema__['info']['version'] = version
-        if title:
-            self.__schema__['info']['title'] = title
-        if host:
-            self.__schema__['host'] = host
-        if base_path:
-            self.__schema__['basePath'] = base_path
+        self.__schema__['info']['description'] = desc or 'description'
+        self.__schema__['info']['version'] = version or '0.0.0'
+        self.__schema__['info']['title'] = title or 'application'
+        self.__schema__['host'] = host or '127.0.0.1'
+        self.__schema__['basePath'] = base_path or ''
 
     def on_get(self, req, resp):
         data = {'paths': {}}
