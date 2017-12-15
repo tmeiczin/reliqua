@@ -2,10 +2,11 @@ This is sample template to create a quick Python Falcon API application. It uses
 
 You define a resource, then add a schema based on the OpenAPI specification.
 
+```python
+
 from falcon_template.resources.base import Resource
 
 class User(Resource):
-
     __schema__ = {
         '/users/{id}': {
             'get': {
@@ -45,3 +46,5 @@ class User(Resource):
 
     def on_get(self, req, resp, id=None):
         resp.body = self.jsonify(users[int(id)])
+        
+```
