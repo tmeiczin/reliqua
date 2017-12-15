@@ -1,0 +1,12 @@
+*
+!.gitattributes
+!.gitignore
+!readme.md
+!requirements.txt
+!.gitkeep
+!*.py
+!*.json
+!*.yaml
+!*.xml
+!*/
+build/
