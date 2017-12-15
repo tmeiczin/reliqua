@@ -1,2 +1,1 @@
-# falcon-template
-Python Falcon API application template
+This is sample template to create a quick Python Falcon API application
