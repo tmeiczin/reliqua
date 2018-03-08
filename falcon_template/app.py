@@ -8,8 +8,9 @@ import sys
 import uuid
 
 from gunicorn.app.base import BaseApplication
+from falcon_cors import CORS
 
-from .resources.base import Resource
+from resources.base import Resource
 
 
 class Application(BaseApplication):
@@ -17,13 +18,14 @@ class Application(BaseApplication):
 
     def __init__(
             self,
+            app=None,
             address='127.0.0.1',
             port=8000,
             host=None,
-            base_path=None,
+            base_path='',
             workers=1,
             resource_path=None,
-            api=None):
+            middleware=None):
         """
         Create a standalone API application
 
@@ -33,19 +35,23 @@ class Application(BaseApplication):
         :param str base_path:     base_path of the api (swagger)
         :param int workers:       number of worker threads
         :param str resource_path: path to the resource modules
-        :param Api api:           an api instance
+        :param App app:           an app instance
+        :param list middleware:   middleware
         :return:                  application instance
         """
+        middleware = middleware or []
         self.options = {
             'bind': '%s:%s' % (address, port),
             'workers': workers
         }
 
-        self.application = api or Api(
+        cors = CORS(allow_all_origins=True)
+        middleware.append(cors.middleware)
+        self.application = app or Api(
             host='%s:%s' % (host, port),
             base_path=base_path,
-            resource_path=resource_path
-        )
+            resource_path=resource_path,
+            middleware=middleware)
         super(Application, self).__init__()
 
     def load_config(self):
@@ -64,7 +70,8 @@ class Api(falcon.API):
             cfg=None,
             resource_path=None,
             host=None,
-            base_path=None):
+            base_path='',
+            middleware=None):
         """
         Create an API instance
 
@@ -76,19 +83,23 @@ class Api(falcon.API):
         """
         self.host = host
         self.base_path = base_path
-        self.resource_path = resource_path
-        self.cfg = cfg
-        self.url = 'http://%s/%s' % (
-            self.host,
-            self.base_path
-        )
+        self.url = 'http://' + self.host + self.base_path
 
         self.path = os.path.dirname(sys.modules[__name__].__file__)
         self.doc_path = self.path + '/swagger'
 
+        middleware = middleware or []
+
         super(Api, self).__init__(
-            middleware=[]
+            middleware=middleware
         )
+
+        if not resource_path:
+            resource_path = self.path + '/resources'
+
+        self.req_options.auto_parse_form_urlencoded = True
+        self.resource_path = resource_path
+        self.cfg = cfg
 
         self._load_resources()
         self._add_routes()
@@ -97,8 +108,8 @@ class Api(falcon.API):
     def _load_resources(self):
         self.resources = []
         files = glob.glob(self.resource_path + '/*.py')
-
         for f in files:
+            print 'loading %s' % (f)
             module_name = str(uuid.uuid3(uuid.NAMESPACE_OID, f))
             module = imp.load_source(module_name, f)
             self.resources.extend(self._get_classes(module))
@@ -116,6 +127,7 @@ class Api(falcon.API):
     def _add_routes(self):
         for resource in self.resources:
             for route in resource.__schema__.keys():
+                print 'adding route %s' % (route)
                 self.add_route(route, resource())
 
     def _add_docs(self, path='/docs/swagger.json'):
@@ -143,6 +155,7 @@ class Swagger(object):
         self.path = path
 
     def on_get(self, req, resp):
+        resp.status = falcon.HTTP_200
         resp.content_type = 'text/html'
 
         with open(self.path + '/index.html', 'r') as f:
@@ -157,6 +170,7 @@ class SwaggerStatic(object):
         self.path = path
 
     def on_get(self, req, resp, filename):
+        resp.status = falcon.HTTP_200
         resp.content_type = 'text/html'
 
         if 'css' in filename:
@@ -171,11 +185,11 @@ class Docs(object):
     __schema__ = {
         'swagger': '2.0',
         'info': {
-            'description': '',
-            'version': '',
-            'title': '',
+            'description': 'application description',
+            'version': '0.0.0',
+            'title': 'application',
         },
-        'host': '',
+        'host': '127.0.0.1',
         'basePath': '',
         'schemes': [
             'http'
@@ -196,13 +210,18 @@ class Docs(object):
             title=None,
             host=None,
             base_path=None):
-
         self.resources = resources
-        self.__schema__['info']['description'] = desc or 'description'
-        self.__schema__['info']['version'] = version or '0.0.0'
-        self.__schema__['info']['title'] = title or 'application'
-        self.__schema__['host'] = host or '127.0.0.1'
-        self.__schema__['basePath'] = base_path or ''
+
+        if desc:
+            self.__schema__['info']['description'] = desc
+        if version:
+            self.__schema__['info']['version'] = version
+        if title:
+            self.__schema__['info']['title'] = title
+        if host:
+            self.__schema__['host'] = host
+        if base_path:
+            self.__schema__['basePath'] = base_path
 
     def on_get(self, req, resp):
         data = {'paths': {}}
