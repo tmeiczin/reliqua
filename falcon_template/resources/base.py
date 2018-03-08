@@ -2,8 +2,13 @@ import json
 import inspect
 import re
 
+from falcon import status_codes
+
 
 class Resource(object):
+
+    def __init__(self):
+        self.status_codes = status_codes
 
     def jsonify(self, data):
         return json.dumps(data)
@@ -20,7 +25,11 @@ class Resource(object):
         if not keys:
             keys = self._params(caller)
 
-        for k in keys:
-            p[k] = req.get_param(k, default='')
+        if req.content_length:
+            for k in keys:
+                p[k] = req.media.get(k)
+        else:
+            for k in keys:
+                p[k] = req.get_param(k, default='')
 
         return p
