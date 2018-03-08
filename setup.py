@@ -19,6 +19,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'falcon>=1.1.0',
+        'falcon-cors',
         'gunicorn>=19.6.0',
     ],
     package_data={},
