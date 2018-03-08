@@ -48,7 +48,7 @@ class Application(BaseApplication):
         cors = CORS(allow_all_origins=True)
         middleware.append(cors.middleware)
         self.application = app or Api(
-            host=host,
+            host='%s:%s' % (host, port),
             base_path=base_path,
             resource_path=resource_path,
             middleware=middleware)
@@ -190,7 +190,7 @@ class Docs(object):
             'title': 'application',
         },
         'host': '127.0.0.1',
-        'basePath': '/api/',
+        'basePath': '',
         'schemes': [
             'http'
         ],

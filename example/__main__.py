@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--address', help='api bind address to listen for requests', default='127.0.0.1')
     parser.add_argument('--port', help='bind port to listen for requests', default=8000)
     parser.add_argument('--host', help='external api hostname for swagger', default='localhost')
-    parser.add_argument('--base-path', help='api base path for swagger', default='/api')
+    parser.add_argument('--base-path', help='api base path for swagger', default='')
     parser.add_argument('--workers', help='worker threads', default=workers)
     parser.add_argument('--resource-path',  help='path to resource modules', default=resource_path)
     parser.add_argument('--config', help='config file', default=None)
