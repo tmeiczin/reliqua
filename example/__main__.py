@@ -1,7 +1,6 @@
 import argparse
 import configparser
 import os
-import socket
 import sys
 from multiprocessing import cpu_count
 
@@ -34,7 +33,7 @@ def main():
     parser.add_argument('--host', help='external api hostname for swagger', default='localhost')
     parser.add_argument('--base-path', help='api base path for swagger', default='')
     parser.add_argument('--workers', help='worker threads', default=workers)
-    parser.add_argument('--resource-path',  help='path to resource modules', default=resource_path)
+    parser.add_argument('--resource-path', help='path to resource modules', default=resource_path)
     parser.add_argument('--config', help='config file', default=None)
 
     args = parser.parse_args()
