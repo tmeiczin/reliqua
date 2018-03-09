@@ -22,7 +22,7 @@ setup(
         'falcon-cors',
         'gunicorn>=19.6.0',
     ],
-    package_data={},
+    package_data={'falcon_template': ['swagger/*']},
     data_files=[],
     entry_points={
         'console_scripts': [
