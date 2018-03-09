@@ -29,15 +29,15 @@ class Application(BaseApplication):
         """
         Create a standalone API application
 
-        :param str address:       address to listen for requests
-        :param int port:          port to listen on
-        :param str host:          the hostname of the server (swagger)
-        :param str base_path:     base_path of the api (swagger)
-        :param int workers:       number of worker threads
-        :param str resource_path: path to the resource modules
-        :param App app:           an app instance
-        :param list middleware:   middleware
-        :return:                  application instance
+        :param App app:           An optional app instance
+        :param str address:       Bind address to listen for requests
+        :param int port:          Bind port to listen on
+        :param str host:          External hostname/ip for Swagger UI
+        :param str base_path:     External API url for Swaager UI
+        :param int workers:       Number of worker threads
+        :param str resource_path: Path to the API resource modules
+        :param list middleware:   Middleware
+        :return:                  Application instance
         """
         middleware = middleware or []
         self.options = {
@@ -68,17 +68,18 @@ class Api(falcon.API):
     def __init__(
             self,
             cfg=None,
-            resource_path=None,
             host=None,
+            resource_path=None,
             base_path='',
             middleware=None):
         """
         Create an API instance
 
-        :param obj cfg:           gunicorn config
-        :param str resource_path: path to the resource modules
-        :param str host:          the hostname of the server (swagger)
-        :param str base_path:     base_path of the api (swagger)
+        :param obj cfg:           Gunicorn config
+        :param str host:          External hostname/ip for Swagger UI
+        :param str resource_path: Path to the resource modules
+        :param str base_path:     External API url for Swaager UI
+        :param list middleware:   Middleware
         :return:                  api instance
         """
         self.host = host
