@@ -54,15 +54,14 @@ class Application(BaseApplication):
         middleware.append(cors.middleware)
 
         if not self.application_options['proxy_api_url']:
-            proxy_api_url ='http://%s' % (bind)
+            proxy_api_url = 'http://%s' % (bind)
 
         self.application = Api(
-            url = proxy_api_url,
+            url=proxy_api_url,
             resource_path=resource_path,
             middleware=middleware)
 
         super(Application, self).__init__()
-
 
     def load_config(self):
         try:
@@ -72,9 +71,9 @@ class Application(BaseApplication):
             if 'config' in config.keys():
                 for k, v in config['config'].items():
                     if self.options.get(k, None):
-                        self.options[k] = b
-        except NoneType:
-            pass
+                        self.options[k] = v
+        except BaseException:
+            raise
 
         for k, v in self.gunicorn_options.iteritems():
             if v is None:
