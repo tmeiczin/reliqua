@@ -72,8 +72,8 @@ class Application(BaseApplication):
                 for k, v in config['config'].items():
                     if self.options.get(k, None):
                         self.options[k] = v
-        except BaseException:
-            raise
+        except TypeError:
+            pass
 
         for k, v in self.gunicorn_options.iteritems():
             if v is None:
