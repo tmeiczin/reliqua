@@ -1,9 +1,11 @@
+import configparser
 import falcon
 import glob
 import imp
 import inspect
 import json
 import os
+import re
 import sys
 import uuid
 
@@ -18,45 +20,65 @@ class Application(BaseApplication):
 
     def __init__(
             self,
-            app=None,
-            address='127.0.0.1',
-            port=8000,
-            host=None,
-            base_path='',
-            workers=1,
+            bind='127.0.0.1:8000',
+            proxy_api_url=None,
+            workers=None,
             resource_path=None,
+            config=None,
             middleware=None):
         """
         Create a standalone API application
 
-        :param App app:           An optional app instance
-        :param str address:       Bind address to listen for requests
-        :param int port:          Bind port to listen on
-        :param str host:          External hostname/ip for Swagger UI
-        :param str base_path:     External API url for Swaager UI
-        :param int workers:       Number of worker threads
-        :param str resource_path: Path to the API resource modules
-        :param list middleware:   Middleware
-        :return:                  Application instance
+        :param str bind:             Address and port to listen for requests [host:port]
+        :param str proxy_api_url:    Proxy URL for API used by Swagger UI (if different from bind)
+        :param int workers:          Number of worker threads
+        :param str resource_path:    Path to the API resource modules
+        :param list middleware:      Middleware
+        :return:                     Application instance
         """
+        self.config = config
         middleware = middleware or []
-        self.options = {
-            'bind': '%s:%s' % (address, port),
-            'workers': workers
+        proxy_api_url = 'http://127.0.0.1:8000'
+
+        self.gunicorn_options = {
+            'bind': bind,
+            'workers': workers,
+        }
+
+        self.application_options = {
+            'proxy_api_url': proxy_api_url,
+            'resource_path': resource_path,
         }
 
         cors = CORS(allow_all_origins=True)
         middleware.append(cors.middleware)
-        self.application = app or Api(
-            host='%s:%s' % (host, port),
-            base_path=base_path,
+
+        if not self.application_options['proxy_api_url']:
+            proxy_api_url ='http://%s' % (bind)
+
+        self.application = Api(
+            url = proxy_api_url,
             resource_path=resource_path,
             middleware=middleware)
+
         super(Application, self).__init__()
 
+
     def load_config(self):
-        for key, value in self.options.items():
-            self.cfg.set(key.lower(), value)
+        try:
+            config = configparser.ConfigParser()
+            config.sections()
+
+            if 'config' in config.keys():
+                for k, v in config['config'].items():
+                    if self.options.get(k, None):
+                        self.options[k] = b
+        except NoneType:
+            pass
+
+        for k, v in self.gunicorn_options.iteritems():
+            if v is None:
+                self.cfg.set(k.lower(), v)
 
     def load(self):
         return self.application
@@ -67,27 +89,27 @@ class Api(falcon.API):
 
     def __init__(
             self,
-            cfg=None,
-            host=None,
+            url=None,
             resource_path=None,
-            base_path='',
             middleware=None):
         """
         Create an API instance
 
         :param obj cfg:           Gunicorn config
-        :param str host:          External hostname/ip for Swagger UI
+        :param str url:           URL used by Swagger UI
         :param str resource_path: Path to the resource modules
-        :param str base_path:     External API url for Swaager UI
         :param list middleware:   Middleware
         :return:                  api instance
         """
-        self.host = host
-        self.base_path = base_path
-        self.url = 'http://' + self.host + self.base_path
+        self.doc_endpoint = '/docs'
+        self.swagger_file = 'swagger.json'
+        self.doc_url = url + self.doc_endpoint
+        m = re.search('http[s]?://(?P<host>.*:\d+)[/]?(?P<base_path>.*)', url).groupdict()
+        self.host = m['host']
+        self.base_path = m['base_path']
 
-        self.path = os.path.dirname(sys.modules[__name__].__file__)
-        self.doc_path = self.path + '/swagger'
+        path = os.path.dirname(sys.modules[__name__].__file__)
+        self.doc_path = path + '/swagger'
 
         middleware = middleware or []
 
@@ -100,7 +122,6 @@ class Api(falcon.API):
 
         self.req_options.auto_parse_form_urlencoded = True
         self.resource_path = resource_path
-        self.cfg = cfg
 
         self._load_resources()
         self._add_routes()
@@ -131,54 +152,46 @@ class Api(falcon.API):
                 print 'adding route %s' % (route)
                 self.add_route(route, resource())
 
-    def _add_docs(self, path='/docs/swagger.json'):
+    def _add_docs(self):
         swagger = Swagger(
-            '%s/docs/swagger.json' % (self.url,),
-            path=self.doc_path,
+            self.doc_url,
+            self.swagger_file,
+            self.doc_path
         )
         docs = Docs(
             self.resources,
             host=self.host,
             base_path=self.base_path
         )
-        static = SwaggerStatic(
-            self.doc_path
-        )
-        self.add_route('/docs', swagger)
-        self.add_route('/docs/{filename}', static)
-        self.add_route(path, docs)
+        self.add_route(self.doc_endpoint, swagger)
+        self.add_route(self.doc_endpoint + '/', swagger)
+        self.add_route(self.doc_endpoint + '/{filename}', swagger)
+        self.add_route(self.doc_endpoint + '/' + self.swagger_file, docs)
 
 
 class Swagger(object):
 
-    def __init__(self, url, path=None):
+    def __init__(self, url, swagger_file, path):
         self.url = url
+        self.swagger_file = self.url + '/' + swagger_file
         self.path = path
 
-    def on_get(self, req, resp):
+    def on_get(self, req, resp, filename='index.html'):
         resp.status = falcon.HTTP_200
-        resp.content_type = 'text/html'
-
-        with open(self.path + '/index.html', 'r') as f:
-            data = f.read()
-
-        resp.body = data.replace('<api_url>', self.url)
-
-
-class SwaggerStatic(object):
-
-    def __init__(self, path):
-        self.path = path
-
-    def on_get(self, req, resp, filename):
-        resp.status = falcon.HTTP_200
-        resp.content_type = 'text/html'
 
         if 'css' in filename:
             resp.content_type = 'text/css'
+        else:
+            resp.content_type = 'text/html'
 
         with open(self.path + '/' + filename, 'r') as f:
-            resp.body = f.read()
+            data = f.read()
+
+        if 'index.html' in filename:
+            data = data.replace('<swagger_json_url>', self.swagger_file)
+            data = data.replace('<swagger_url>', self.url)
+
+        resp.body = data
 
 
 class Docs(object):
@@ -190,10 +203,11 @@ class Docs(object):
             'version': '0.0.0',
             'title': 'application',
         },
-        'host': '127.0.0.1',
+        'host': '127.0.0.1:8000',
         'basePath': '',
         'schemes': [
-            'http'
+            'http',
+            'https',
         ],
         'consumes': [
             'application/json',

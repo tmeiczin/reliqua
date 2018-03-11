@@ -7,22 +7,6 @@ from multiprocessing import cpu_count
 from falcon_template.app import Application
 
 
-def _load_config(args):
-    config = configparser.ConfigParser()
-    config.sections()
-    config.read(args.config)
-
-    if 'config' not in config.keys():
-        return args
-
-    c_args = [x.lstrip('-') for x in sys.argv[1:] if x.startswith('-')]
-    for k, v in config['config'].items():
-        if k not in c_args:
-            setattr(args, k, v)
-
-    return args
-
-
 def main():
     bind_address = '127.0.0.01'
     bind_port = 8000
@@ -47,11 +31,8 @@ def main():
         _load_config(args)
 
     app = Application(
-        address=args.address,
-        port=args.port,
+        bind='%s:%s' % (args.address, args.port),
         workers=args.workers,
-        host=args.host,
-        base_path=args.base_path,
         resource_path=resource_path
     )
     app.run()
