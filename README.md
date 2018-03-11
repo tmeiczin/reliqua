@@ -69,11 +69,9 @@ from falcon_template.app import Application
 
     
 app = Application(
-    address='0.0.0.0',
-    port=8000,
+    bind='0.0.0.0:8000',
+    proxy_api_url = 'http://example.com/api',
     workers=1,
-    host='example.com,
-    base_path='/api',
     resource_path='/var/www/html/resources'
 )
 app.run()
@@ -82,12 +80,11 @@ app.run()
 ```
 Where:
 
-address:       ip address to listen to requests, 0.0.0.0 means any interface
-port:          port to listen on
-workers:       number of worker threads to start
-host:          external hostname or ip address that is reachable from clients, used by swagger-ui
-base_path:     the api base path for the api, used by swagger-ui
-resource_path: this is where your python resource files are located
+bind:           Address and port to listen for requests. [host:port]
+proxy_api_url:  The URL to the API when being used with a proxy, like nginx. If not supplied,
+                then the bind address is used.
+workers:        Number of worker threads to start.
+resource_path:  This is where your python resource files are located.
 ```
 
 Refer to the example application for more examples. You can install the library and example application
@@ -102,7 +99,7 @@ You can execute the example application
 $ falcon-app 
 ```
 
-From here the swagger-ui should be available at
+From here the swagger-ui will be available at
 
 ````
 http://localhost:8000/docs/
