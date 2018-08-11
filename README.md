@@ -4,7 +4,7 @@ You define a resource, then add a schema based on the OpenAPI specification.
 
 ```python
 
-from falcon_template.resources.base import Resource
+from reliqua.resources.base import Resource
 
 
 class User(Resource):
@@ -46,7 +46,7 @@ class User(Resource):
     }
 
     def on_get(self, req, resp, id=None):
-        resp.body = self.jsonify(users[int(id)])
+        resp.json = {users[int(id)]}
         
 ```
 

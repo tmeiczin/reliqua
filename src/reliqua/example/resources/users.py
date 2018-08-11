@@ -74,12 +74,12 @@ class User(Resource):
     }
 
     def on_get(self, req, resp, id=None):
-        resp.body = self.jsonify(users[int(id)])
+        resp.json = {users[int(id)]}
 
     def on_delete(self, req, resp, id=None):
         try:
             users.pop(int(id))
-            resp.body = self.jsonify({'success': True})
+            resp.json = {'success': True}
         except IndexError:
             resp.status = '400'
 
