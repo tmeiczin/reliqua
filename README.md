@@ -96,7 +96,7 @@ python setup.py install
 You can execute the example application
 
 ```
-$ falcon-app 
+$ reliqua-example 
 ```
 
 From here the swagger-ui will be available at

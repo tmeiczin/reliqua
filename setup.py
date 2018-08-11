@@ -7,7 +7,7 @@ with open('README.md') as f:
     desc = f.read()
 
 setup(
-    name='unrest',
+    name='reliqua',
     version='1.0.0',
     description=('API application template'),
     long_description=desc,
@@ -24,11 +24,11 @@ setup(
         'gunicorn>=19.6.0',
         'six',
     ],
-    package_data={'unrest': ['swagger/*']},
+    package_data={'reliqua': ['swagger/*']},
     data_files=[],
     entry_points={
         'console_scripts': [
-            'unrest-example=unrest.example.__main__:main'
+            'reliqua-example=reliqua.example.__main__:main'
         ],
     },
 )
