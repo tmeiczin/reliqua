@@ -65,7 +65,7 @@ http://<api-url>/docs/swagger.json
 To create an application, you import the application template.
 
 ```python
-from falcon_template.app import Application
+from reliqua.app import Application
 
     
 app = Application(
