@@ -1,5 +1,4 @@
 import falcon
-import json
 
 
 class ProcessParams(object):
@@ -28,11 +27,3 @@ class ProcessParams(object):
                 raise falcon.HTTPBadRequest('Missing parameter %s' % (name), 'Bad Request')
 
             request.params[name] = data.get(name, '')
-
-
-class JsonResponse(object):
-
-    def process_response(self, req, resp, resource, req_succeeded):
-        data = getattr(resp, 'json', None)
-        if data is not None:
-            resp.body = json.dumps(data)

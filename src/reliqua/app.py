@@ -2,7 +2,6 @@ import falcon
 import glob
 import imp
 import inspect
-import json
 import os
 import re
 import sys
@@ -13,7 +12,7 @@ from gunicorn.app.base import BaseApplication
 from falcon_cors import CORS
 
 from . resources.base import Resource
-from . middleware import ProcessParams, JsonResponse
+from . middleware import ProcessParams
 
 
 def load_config(config_file):
@@ -83,7 +82,6 @@ class Application(BaseApplication):
         cors = CORS(allow_all_origins=True)
         middleware.append(cors.middleware)
         middleware.append(ProcessParams())
-        middleware.append(JsonResponse())
 
         if not proxy_api_url:
             proxy_api_url = 'http://%s' % (bind)
@@ -271,4 +269,4 @@ class Docs(object):
 
         data.update(self.__schema__)
         resp.set_header('Access-Control-Allow-Origin', '*')
-        resp.body = json.dumps(data)
+        resp.media = data

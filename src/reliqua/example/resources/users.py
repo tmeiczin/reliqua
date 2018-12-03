@@ -74,12 +74,15 @@ class User(Resource):
     }
 
     def on_get(self, req, resp, id=None):
-        resp.json = {users[int(id)]}
+        try:
+            resp.media = users[int(id)]
+        except IndexError:
+            resp.status = '404'
 
     def on_delete(self, req, resp, id=None):
         try:
             users.pop(int(id))
-            resp.json = {'success': True}
+            resp.media = {'success': True}
         except IndexError:
             resp.status = '400'
 
@@ -169,9 +172,9 @@ class Users(Resource):
         else:
             results = users
 
-        resp.json = results
+        resp.media = results
 
     def on_post(self, req, resp):
         p = req.params
         users.append(p)
-        resp.json = len(users) - 1
+        resp.media = len(users) - 1
