@@ -12,68 +12,31 @@ users = [
     }
 ]
 
+phone = ['207-827-0028']
+
 
 class User(Resource):
 
-    __schema__ = {
-        '/users/{id}': {
-            'get': {
-                'description': 'retrieve users',
-                'operationId': 'getUser',
-                'tags': [
-                    'users'
-                ],
-                'parameters': [
-                    {
-                        'name': 'id',
-                        'in': 'path',
-                        'description': 'User ID',
-                        'required': True,
-                        'type': 'string'
-                    },
-                ],
-                'responses': {
-                    '200': {
-                        'description': 'successful operation',
-                        'examples': {
-                            'application/json': {
-                                'results': [
-                                    {
-                                        'username': 'fred',
-                                        'email': 'fred@fake.com',
-                                    }
-                                ],
-                                'success': True,
-                            }
-                        }
-                    }
-                }
-            },
-            'delete': {
-                'description': 'Delete user',
-                'operationId': 'deleteUser',
-                'tags': [
-                    'users'
-                ],
-                'parameters': [
-                    {
-                        'name': 'id',
-                        'in': 'path',
-                        'description': 'user id',
-                        'required': True,
-                        'type': 'string'
-                    },
-                ],
-                'responses': {
-                    '400': {
-                        'description': 'Invalid input values'
-                    }
-                },
-            },
-        }
-    }
+    __routes__ = [
+        '/users/{id}',
+    ]
+
+    phone = phone
 
     def on_get(self, req, resp, id=None):
+        """
+        Retrieve a user. This value
+        is awesome
+
+        :param str id:       [in_path, required] User ID
+        :param str email:    [in_query] User Email
+        :param str phone:    [in_query, enum] Phone Numbers 
+
+        :response 200:
+        :response 400:
+
+        :return json:
+        """
         try:
             resp.media = users[int(id)]
         except IndexError:
@@ -89,80 +52,24 @@ class User(Resource):
 
 class Users(Resource):
 
-    __schema__ = {
-        '/users': {
-            'get': {
-                'description': 'list all users',
-                'operationId': 'listUsers',
-                'tags': [
-                    'users'
-                ],
-                'parameters': [
-                    {
-                        'name': 'username',
-                        'in': 'query',
-                        'description': 'Filter by username',
-                        'required': True,
-                        'type': 'string'
-                    },
-                    {
-                        'name': 'email',
-                        'in': 'query',
-                        'description': 'Filter by email',
-                        'required': False,
-                    },
-                ],
-                'responses': {
-                    '200': {
-                        'description': 'successful operation',
-                        'examples': {
-                            'application/json': {
-                                'results': [
-                                    {
-                                        'username': 'fred',
-                                        'email': 'fred@fake.com',
-                                    }
-                                ],
-                                'success': True,
-                            }
-                        }
-                    }
-                }
-            },
-            'post': {
-                'description': 'Create a new user',
-                'operationId': 'addUser',
-                'tags': [
-                    'users'
-                ],
-                'parameters': [
-                    {
-                        'name': 'usermame',
-                        'in': 'query',
-                        'description': 'username of the user',
-                        'required': True,
-                        'type': 'string'
-                    },
-                    {
-                        'name': 'email',
-                        'in': 'query',
-                        'description': 'user email address',
-                        'required': True,
-                        'type': 'string'
-                    }
-                ],
-                'responses': {
-                    '405': {
-                        'description': 'Invalid input'
-                    }
-                },
-            },
-        }
-    }
+    __routes__ = [
+        '/users',
+    ]
 
-    def on_get(self, req, resp, id=None):
-        p = req.params
+    def on_get(self, req, resp):
+        """
+        Retrieve a user
+
+        :param str username:      [in_query, required] Username 
+        :param str email:   [in_query]  Email
+
+        :response 200:
+        :response 400:
+
+        :return json:
+        """
         results = []
+        p = req.params
         if any(p.values()):
             for user in users:
                 if user['username'] == p.get('username', None):
@@ -173,6 +80,14 @@ class Users(Resource):
             results = users
 
         resp.media = results
+
+    def on_delete(self, req, resp):
+        p = req.params
+        try:
+            users.pop(int(p.get(id, None)))
+            resp.media = {'success': True}
+        except IndexError:
+            resp.status = '400'
 
     def on_post(self, req, resp):
         p = req.params
