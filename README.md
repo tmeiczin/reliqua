@@ -5,49 +5,42 @@ You define a resource, then add a schema based on the OpenAPI specification.
 ```python
 
 from reliqua.resources.base import Resource
+from reliqua import status_codes as status
 
 
 class User(Resource):
-    __schema__ = {
-        '/users/{id}': {
-            'get': {
-                'description': 'retrieve users',
-                'operationId': 'getUser',
-                'tags': [
-                    'users'
-                ],
-                'parameters': [
-                    {
-                        'name': 'id',
-                        'in': 'path',
-                        'description': 'User ID',
-                        'required': True,
-                        'type': 'string'
-                    },
-                ],
-                'responses': {
-                    '200': {
-                        'description': 'successful operation',
-                        'examples': {
-                            'application/json': {
-                                'results': [
-                                    {
-                                        'username': 'fred',
-                                        'email': 'fred@fake.com',
-                                    }
-                                ],
-                                'success': True,
-                            }
-                        }
-                    }
-                }
-            },
-        }
-    }
+
+    __routes__ = [
+        '/users/{id}',
+    ]
+
+    phone = phone
 
     def on_get(self, req, resp, id=None):
-        resp.json = {users[int(id)]}
-        
+        """
+        Retrieve a user. This value
+        is awesome
+
+        :param str id:       [in_path, required] User ID
+        :param str email:    [in_query] User Email
+        :param str phone:    [in_query, enum] Phone Numbers
+
+        :response 200:
+        :response 400:
+
+        :return json:
+        """
+        try:
+            resp.media = users[int(id)]
+        except IndexError:
+            resp.status = status.HTTP_404
+
+    def on_delete(self, req, resp, id=None):
+        try:
+            users.pop(int(id))
+            resp.media = {'success': True}
+        except IndexError
+            resp.status = status.HTTP_400
 ```
 
 This will create the /users/{id} endpoint and swagger documentation. The swagger documentation and swagger.json will be dynamically generate at application startup. The swagger ui will be available at:

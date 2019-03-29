@@ -25,12 +25,11 @@ class User(Resource):
 
     def on_get(self, req, resp, id=None):
         """
-        Retrieve a user. This value
-        is awesome
+        Retrieve a user.
 
         :param str id:       [in_path, required] User ID
         :param str email:    [in_query] User Email
-        :param str phone:    [in_query, enum] Phone Numbers 
+        :param str phone:    [in_query, enum] Phone Numbers
 
         :response 200:
         :response 400:
@@ -43,6 +42,15 @@ class User(Resource):
             resp.status = '404'
 
     def on_delete(self, req, resp, id=None):
+        """
+        Delete a user.
+
+        :param str id:      [in_path, required] User Id
+
+        :response 200:
+        :response 400:
+        :return json:
+        """
         try:
             users.pop(int(id))
             resp.media = {'success': True}
@@ -60,8 +68,8 @@ class Users(Resource):
         """
         Retrieve a user
 
-        :param str username:      [in_query, required] Username 
-        :param str email:   [in_query]  Email
+        :param str username:      [in_query, required] Username
+        :param str email:         [in_query]  Email
 
         :response 200:
         :response 400:

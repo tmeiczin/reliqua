@@ -62,7 +62,7 @@ class Docs(object):
                 c.__schema__[route] = self.add_route(c, route)
                 self.__schema__['paths'].update(c.__schema__)
 
-    def (self, resource, route):
+    def add_route(self, resource, route):
         verbs = ['get', 'put', 'post', 'delete']
         schema = {}
 
