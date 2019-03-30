@@ -24,12 +24,12 @@ class Docs(object):
 
     Description of method.
 
-    :param str username:  [in_path]  User ID
+    :param str username:  [in_path, required] User ID
     :param str email:     [in_query] User Email
     :param str phone:     [in_query, enum] Phone Numbers
 
     :response 200:        user was retrieved
-    :response 400:        invalid query paremeter
+    :response 400:        invalid query parameter
 
     :return json:
 
@@ -40,7 +40,7 @@ class Docs(object):
     Modifiers are only needed to override default values:
 
     in_query|in_path|in_body      Where parameter will be read from [default: in_query]
-    required                      Whether paramter is required [default: False (except POST)]
+    required                      Whether parameter is required [default: False (except POST)]
     enum                          The parameter values are limited by a list.
                                   A list of the same name must be specified within resource namespace
     -- Responses --
@@ -49,7 +49,7 @@ class Docs(object):
     documentation.
 
     -- Return --
-    The return type if the method.
+    The return type of the method.
     """
     __schema__ = {
         'swagger': '2.0',
