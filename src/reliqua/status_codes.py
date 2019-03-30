@@ -1,122 +1,73 @@
 """ HTTP STATUS CODES """
 
 
-# 1xx Informational
-HTTP_100 = '100 Continue'
-HTTP_CONTINUE = HTTP_100
-HTTP_101 = '101 Switching Protocols'
-HTTP_SWITCHING_PROTOCOLS = HTTP_101
-HTTP_102 = '102 Processing'
-HTTP_PROCESSING = HTTP_102
+def http(code):
+    try:
+        int(code)
+        return '%s %s' % (code, CODES[str(code)])
+    except ValueError:
+        return '%s %s' % (MESSAGES[code.upper()], code)
 
-# 2xx Success
-HTTP_200 = '200 OK'
-HTTP_OK = HTTP_200
-HTTP_201 = '201 Created'
-HTTP_CREATED = HTTP_201
-HTTP_202 = '202 Accepted'
-HTTP_ACCEPTED = HTTP_202
-HTTP_203 = '203 Non-Authoritative Information'
-HTTP_NON_AUTHORITATIVE_INFORMATION = HTTP_203
-HTTP_204 = '204 No Content'
-HTTP_NO_CONTENT = HTTP_204
-HTTP_205 = '205 Reset Content'
-HTTP_RESET_CONTENT = HTTP_205
-HTTP_206 = '206 Partial Content'
-HTTP_PARTIAL_CONTENT = HTTP_206
-HTTP_207 = '207 Multi-Status'
-HTTP_MULTI_STATUS = HTTP_207
 
-# 3xx Redirection
-HTTP_300 = '300 Multiple Choices'
-HTTP_MULTIPLE_CHOICES = HTTP_300
-HTTP_301 = '301 Moved Permanently'
-HTTP_MOVED_PERMANENTLY = HTTP_301
-HTTP_302 = '302 Found'
-HTTP_FOUND = HTTP_302
-HTTP_303 = '303 See Other'
-HTTP_SEE_OTHER = HTTP_303
-HTTP_304 = '304 Not Modified'
-HTTP_NOT_MODIFIED = HTTP_304
-HTTP_305 = '305 Use Proxy'
-HTTP_USE_PROXY = HTTP_305
-HTTP_307 = '307 Temporary Redirect'
-HTTP_TEMPORARY_REDIRECT = HTTP_307
-HTTP_308 = '308 Permanent Redirect'
-HTTP_PERMANENT_REDIRECT = HTTP_308
+HTTP = http
 
-# 4xx Client Error
-HTTP_400 = '400 Bad Request'
-HTTP_BAD_REQUEST = HTTP_400
-HTTP_401 = '401 Unauthorized'
-HTTP_UNAUTHORIZED = HTTP_401
-HTTP_402 = '402 Payment Required'
-HTTP_PAYMENT_REQUIRED = HTTP_402
-HTTP_403 = '403 Forbidden'
-HTTP_FORBIDDEN = HTTP_403
-HTTP_404 = '404 Not Found'
-HTTP_NOT_FOUND = HTTP_404
-HTTP_405 = '405 Method Not Allowed'
-HTTP_METHOD_NOT_ALLOWED = HTTP_405
-HTTP_406 = '406 Not Acceptable'
-HTTP_NOT_ACCEPTABLE = HTTP_406
-HTTP_407 = '407 Proxy Authentication Required'
-HTTP_PROXY_AUTHENTICATION_REQUIRED = HTTP_407
-HTTP_408 = '408 Request Time-out'
-HTTP_REQUEST_TIMEOUT = HTTP_408
-HTTP_409 = '409 Conflict'
-HTTP_CONFLICT = HTTP_409
-HTTP_410 = '410 Gone'
-HTTP_GONE = HTTP_410
-HTTP_411 = '411 Length Required'
-HTTP_LENGTH_REQUIRED = HTTP_411
-HTTP_412 = '412 Precondition Failed'
-HTTP_PRECONDITION_FAILED = HTTP_412
-HTTP_413 = '413 Payload Too Large'
-HTTP_REQUEST_ENTITY_TOO_LARGE = HTTP_413
-HTTP_414 = '414 URI Too Long'
-HTTP_REQUEST_URI_TOO_LONG = HTTP_414
-HTTP_415 = '415 Unsupported Media Type'
-HTTP_UNSUPPORTED_MEDIA_TYPE = HTTP_415
-HTTP_416 = '416 Range Not Satisfiable'
-HTTP_REQUESTED_RANGE_NOT_SATISFIABLE = HTTP_416
-HTTP_417 = '417 Expectation Failed'
-HTTP_EXPECTATION_FAILED = HTTP_417
-HTTP_418 = "418 I'm a teapot"
-HTTP_IM_A_TEAPOT = HTTP_418
-HTTP_422 = '422 Unprocessable Entity'
-HTTP_UNPROCESSABLE_ENTITY = HTTP_422
-HTTP_423 = '423 Locked'
-HTTP_LOCKED = HTTP_423
-HTTP_424 = '424 Failed Dependency'
-HTTP_FAILED_DEPENDENCY = HTTP_424
-HTTP_426 = '426 Upgrade Required'
-HTTP_UPGRADE_REQUIRED = HTTP_426
-HTTP_428 = '428 Precondition Required'
-HTTP_PRECONDITION_REQUIRED = HTTP_428
-HTTP_429 = '429 Too Many Requests'
-HTTP_TOO_MANY_REQUESTS = HTTP_429
-HTTP_431 = '431 Request Header Fields Too Large'
-HTTP_REQUEST_HEADER_FIELDS_TOO_LARGE = HTTP_431
-HTTP_451 = '451 Unavailable For Legal Reasons'
-HTTP_UNAVAILABLE_FOR_LEGAL_REASONS = HTTP_451
 
-# 5xx Server Error
-HTTP_500 = '500 Internal Server Error'
-HTTP_INTERNAL_SERVER_ERROR = HTTP_500
-HTTP_501 = '501 Not Implemented'
-HTTP_NOT_IMPLEMENTED = HTTP_501
-HTTP_502 = '502 Bad Gateway'
-HTTP_BAD_GATEWAY = HTTP_502
-HTTP_503 = '503 Service Unavailable'
-HTTP_SERVICE_UNAVAILABLE = HTTP_503
-HTTP_504 = '504 Gateway Timeout'
-HTTP_GATEWAY_TIMEOUT = HTTP_504
-HTTP_505 = '505 HTTP Version Not Supported'
-HTTP_HTTP_VERSION_NOT_SUPPORTED = HTTP_505
-HTTP_507 = '507 Insufficient Storage'
-HTTP_INSUFFICIENT_STORAGE = HTTP_507
-HTTP_508 = '508 Loop Detected'
-HTTP_LOOP_DETECTED = HTTP_508
-HTTP_511 = '511 Network Authentication Required'
-HTTP_NETWORK_AUTHENTICATION_REQUIRED = HTTP_511
+CODES = {
+    '100': 'Continue',
+    '101': 'Switching Protocols',
+    '102': 'Processing',
+    '200': 'OK',
+    '201': 'Created',
+    '202': 'Accepted',
+    '203': 'Non-Authoritative Information',
+    '204': 'No Content',
+    '205': 'Reset Content',
+    '206': 'Partial Content',
+    '207': 'Multi-Status',
+    '300': 'Multiple Choices',
+    '301': 'Moved Permanently',
+    '302': 'Found',
+    '303': 'See Other',
+    '304': 'Not Modified',
+    '305': 'Use Proxy',
+    '307': 'Temporary Redirect',
+    '308': 'Permanent Redirect',
+    '400': 'Bad Request',
+    '401': 'Unauthorized',
+    '402': 'Payment Required',
+    '403': 'Forbidden',
+    '404': 'Not Found',
+    '405': 'Method Not Allowed',
+    '406': 'Not Acceptable',
+    '407': 'Proxy Authentication Required',
+    '408': 'Request Time-out',
+    '409': 'Conflict',
+    '410': 'Gone',
+    '411': 'Length Required',
+    '412': 'Precondition Failed',
+    '413': 'Payload Too Large',
+    '414': 'URI Too Long',
+    '415': 'Unsupported Media Type',
+    '416': 'Range Not Satisfiable',
+    '417': 'Expectation Failed',
+    '418': 'I am a teapot',
+    '422': 'Unprocessable Entity',
+    '423': 'Locked',
+    '424': 'Failed Dependency',
+    '426': 'Upgrade Required',
+    '428': 'Precondition Required',
+    '429': 'Too Many Requests',
+    '431': 'Request Header Fields Too Large',
+    '451': 'Unavailable For Legal Reasons',
+    '500': 'Internal Server Error',
+    '501': 'Not Implemented',
+    '502': 'Bad Gateway',
+    '503': 'Service Unavailable',
+    '504': 'Gateway Timeout',
+    '505': 'HTTP Version Not Supported',
+    '507': 'Insufficient Storage',
+    '508': 'Loop Detected',
+    '511': 'Network Authentication Required',
+}
+
+MESSAGES = dict((v.upper().replace(' ', '_'), k) for k, v in CODES.items())

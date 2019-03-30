@@ -31,8 +31,8 @@ class User(Resource):
         :param str email:    [in_query] User Email
         :param str phone:    [in_query, enum] Phone Numbers
 
-        :response 200:
-        :response 400:
+        :response 200:       user was retrieved
+        :response 400:       invalid query paremeter
 
         :return json:
         """
@@ -47,8 +47,6 @@ class User(Resource):
 
         :param str id:      [in_path, required] User Id
 
-        :response 200:
-        :response 400:
         :return json:
         """
         try:
@@ -71,9 +69,6 @@ class Users(Resource):
         :param str username:      [in_query, required] Username
         :param str email:         [in_query]  Email
 
-        :response 200:
-        :response 400:
-
         :return json:
         """
         results = []
@@ -90,6 +85,13 @@ class Users(Resource):
         resp.media = results
 
     def on_delete(self, req, resp):
+        """
+        Delete a user.
+
+        :param str id:      [in_query, required] User Id
+
+        :return json:
+        """
         p = req.params
         try:
             users.pop(int(p.get(id, None)))
@@ -98,6 +100,14 @@ class Users(Resource):
             resp.status = '400'
 
     def on_post(self, req, resp):
+        """
+        Retrieve a user
+
+        :param str username:      [in_body, required] Username
+        :param str email:         [in_body, required]  Email
+
+        :return json:
+        """
         p = req.params
         users.append(p)
         resp.media = len(users) - 1

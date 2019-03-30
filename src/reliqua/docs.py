@@ -2,14 +2,17 @@ import inspect
 import re
 
 
-default_responses = {
-    '200': {
-        'description': 'successful operation',
-    },
-    '400': {
-        'description': 'invalid input values',
-    },
-}
+def default_responses():
+
+    default_responses = {
+        '200': {
+            'description': 'Successful operation',
+        },
+        '400': {
+            'description': 'Bad input values',
+        },
+    }
+    return default_responses
 
 
 class Docs(object):
@@ -59,10 +62,10 @@ class Docs(object):
         for c in resources:
             c.__schema__ = {}
             for route in c.__routes__:
-                c.__schema__[route] = self.add_route(c, route)
+                c.__schema__[route] = self.route_schema(c, route)
                 self.__schema__['paths'].update(c.__schema__)
 
-    def add_route(self, resource, route):
+    def route_schema(self, resource, route):
         verbs = ['get', 'put', 'post', 'delete']
         schema = {}
 
@@ -74,31 +77,50 @@ class Docs(object):
             if not method.__doc__:
                 continue
 
+            operation_id = '%s%s' % (verb, resource.__name__.capitalize())
+            tags = [resource.__name__.lower()]
+            responses = default_responses()
+            parameters = []
+
             doc = inspect.cleandoc(method.__doc__)
             match = re.search(r'(.*?):', doc, re.MULTILINE | re.DOTALL)
+
             if match:
                 description = match.group(1).replace('\n', ' ')
             else:
                 description = resource.__name__.capitalize()
-            operation_id = '%s%s' % (verb, resource.__name__.capitalize())
-            tags = [resource.__name__.lower()]
-            parameters = []
 
-            matches = re.finditer(r'^:(?P<token>|param|response|return)\s+(?P<token_fields>.*):\s+(?P<desc>.*)', doc, re.MULTILINE)
+            matches = re.finditer(r'^:(?P<token>|param|response|return)\s+(?P<token_fields>.*):\s+(?P<desc>[^:]*)', doc, re.MULTILINE)
             for match in matches:
                 m = match.groupdict()
                 if m['token'] == 'param':
                     parameters.append(self.process_parameter(resource, m))
+                if m['token'] == 'response':
+                    responses.update(self.process_response(resource, m))
 
             schema[verb] = {
                 'description': description,
                 'operationId': operation_id,
                 'tags': tags,
                 'parameters': parameters,
-                'responses': []
+                'responses': responses
             }
 
         return schema
+
+    def process_response(self, resource, r):
+        response_code = r['token_fields']
+        desc = r['desc']
+        response = {
+            response_code: {
+                'description': desc
+            }
+        }
+
+        return response
+
+    def request_body(self, resource, p):
+        pass
 
     def process_parameter(self, resource, m):
         required = False

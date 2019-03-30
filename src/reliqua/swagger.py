@@ -1,4 +1,4 @@
-from . import status_codes as status
+from . status_codes import HTTP
 
 
 class Swagger(object):
@@ -9,7 +9,7 @@ class Swagger(object):
         self.path = path
 
     def on_get(self, req, resp, filename='index.html'):
-        resp.status = status.HTTP_200
+        resp.status = HTTP(200)
         resp.content_type = 'text/html'
 
         with open(self.path + '/' + filename, 'r') as f:
