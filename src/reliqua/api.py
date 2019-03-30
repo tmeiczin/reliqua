@@ -84,10 +84,6 @@ class Api(falcon.API):
         classes = []
         for n, c in inspect.getmembers(module, inspect.isclass):
             print 'checking %s' % (n)
-            try:
-                print dir(c)
-            except BaseException:
-                pass
             if issubclass(c, Resource) and hasattr(c, '__routes__'):
                 classes.append(c)
 
@@ -95,9 +91,7 @@ class Api(falcon.API):
 
     def _add_routes(self):
         for resource in self.resources:
-            print resource
             routes = getattr(resource, '__routes__')
-            print routes
             for route in routes:
                 print('adding route %s' % (route))
                 self.add_route(route, resource())

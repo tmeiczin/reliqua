@@ -16,7 +16,41 @@ def default_responses():
 
 
 class Docs(object):
+    """
+    This class will process resource method doc strings to generate a schema
+    that will be used for the API, parameter checking and validation.
 
+    Example:
+
+    Description of method.
+
+    :param str username:  [in_path]  User ID
+    :param str email:     [in_query] User Email
+    :param str phone:     [in_query, enum] Phone Numbers
+
+    :response 200:        user was retrieved
+    :response 400:        invalid query paremeter
+
+    :return json:
+
+    -- Parameters --
+    Parameters follow standard Python type. Modifier options are
+    placed within []'s and are followed by the parameter description.
+
+    Modifiers are only needed to override default values:
+
+    in_query|in_path|in_body      Where parameter will be read from [default: in_query]
+    required                      Whether paramter is required [default: False (except POST)]
+    enum                          The parameter values are limited by a list.
+                                  A list of the same name must be specified within resource namespace
+    -- Responses --
+    By default all standard HTTP messages will be available as defined by status codes. They only
+    need to be listed here to change the message or to explicitly show the message in the API
+    documentation.
+
+    -- Return --
+    The return type if the method.
+    """
     __schema__ = {
         'swagger': '2.0',
         'info': {
@@ -52,7 +86,7 @@ class Docs(object):
         info = schema['info']
         info['description'] = desc or info['description']
         info['version'] = version or info['version']
-        info['title'] = version or info['title']
+        info['title'] = title or info['title']
         schema['host'] = host or schema['host']
         schema['basePath'] = base_path or schema['basePath']
 

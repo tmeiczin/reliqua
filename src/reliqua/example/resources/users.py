@@ -27,7 +27,7 @@ class User(Resource):
         """
         Retrieve a user.
 
-        :param str id:       [in_path, required] User ID
+        :param str id:       [in_path] User ID
         :param str email:    [in_query] User Email
         :param str phone:    [in_query, enum] Phone Numbers
 
@@ -101,9 +101,9 @@ class Users(Resource):
 
     def on_post(self, req, resp):
         """
-        Retrieve a user
+        Create a new user
 
-        :param str username:      [in_body, required] Username
+        :param str username:      [in_body, required]  Username
         :param str email:         [in_body, required]  Email
 
         :return json:

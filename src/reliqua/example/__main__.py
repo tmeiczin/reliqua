@@ -36,7 +36,8 @@ def main():
         resource_path=args.resource_path,
         proxy_api_url=args.proxy_api_url,
         version='1.0.0',
-        desc='Example API'
+        desc='Example API',
+        title='Reliqua Example'
     )
     app.run()
 
