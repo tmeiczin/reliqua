@@ -112,6 +112,10 @@ class Docs(object):
                 continue
 
             operation_id = '%s%s' % (verb, resource.__name__.capitalize())
+            tag = {
+                'name': resource.__name__.lower(),
+                'description': 'Manage %s' % (resource.__name__.capitalize())
+            }
             tags = [resource.__name__.lower()]
             responses = default_responses()
             parameters = []
