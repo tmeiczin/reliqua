@@ -95,11 +95,13 @@ class Docs(object):
     def process_resources(self, resources):
         for c in resources:
             c.__schema__ = {}
+            schema = self.resource_schema(c)
             for route in c.__routes__:
-                c.__schema__[route] = self.route_schema(c, route)
-                self.__schema__['paths'].update(c.__schema__)
+                c.__schema__[route] = schema
 
-    def route_schema(self, resource, route):
+            self.__schema__['paths'].update(c.__schema__)
+
+    def resource_schema(self, resource):
         verbs = ['get', 'put', 'post', 'delete']
         schema = {}
 
@@ -112,11 +114,12 @@ class Docs(object):
                 continue
 
             operation_id = '%s%s' % (verb, resource.__name__.capitalize())
+            description = resource.__name__.capitalize()
             tag = {
                 'name': resource.__name__.lower(),
                 'description': 'Manage %s' % (resource.__name__.capitalize())
             }
-            tags = [resource.__name__.lower()]
+            tags = [tag['name']]
             responses = default_responses()
             parameters = []
 
@@ -125,16 +128,12 @@ class Docs(object):
 
             if match:
                 description = match.group(1).replace('\n', ' ')
-            else:
-                description = resource.__name__.capitalize()
 
-            matches = re.finditer(r'^:(?P<token>|param|response|return)\s+(?P<token_fields>.*):\s+(?P<desc>[^:]*)', doc, re.MULTILINE)
-            for match in matches:
-                m = match.groupdict()
-                if m['token'] == 'param':
-                    parameters.append(self.process_parameter(resource, m))
-                if m['token'] == 'response':
-                    responses.update(self.process_response(resource, m))
+            tokens = self.process_tokens(doc)
+            for parameter in tokens['param']:
+                parameters.append(self.process_parameter(resource, parameter))
+            for response in tokens['response']:
+                responses.update(self.process_response(resource, response))
 
             schema[verb] = {
                 'description': description,
@@ -145,6 +144,21 @@ class Docs(object):
             }
 
         return schema
+
+    def request_body(self, resource, p):
+        pass
+
+    def process_tokens(self, doc):
+        tokens = {
+            'param': [],
+            'response': [],
+            'return': []
+        }
+        for token in tokens.keys():
+            matches = re.finditer(r'^:(?P<token>%s)\s+(?P<token_fields>.*):\s+(?P<desc>[^:]*)' % (token,), doc, re.MULTILINE)
+            tokens[token] = [x.groupdict() for x in matches]
+
+        return tokens
 
     def process_response(self, resource, r):
         response_code = r['token_fields']
@@ -157,22 +171,18 @@ class Docs(object):
 
         return response
 
-    def request_body(self, resource, p):
-        pass
-
-    def process_parameter(self, resource, m):
+    def process_parameter(self, resource, p):
         required = False
         enum = None
         attributes = []
         where = 'query'
-        token_type, token_name = m['token_fields'].split()
+        description = p['desc']
 
-        match = re.match(r'\[(.*)\]\s+(.*)', m['desc'])
+        token_type, token_name = p['token_fields'].split()
+        match = re.match(r'\[(.*)\]\s+(.*)', p['desc'])
         if match:
             attributes, description = match.groups()
             attributes = re.split(r',\s+', attributes)
-        else:
-            description = m['desc']
 
         if token_type == 'str':
             token_type = 'string'
