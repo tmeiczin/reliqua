@@ -3,7 +3,6 @@ import re
 
 
 def default_responses():
-
     default_responses = {
         '200': {
             'description': 'Successful operation',
@@ -39,10 +38,10 @@ class Docs(object):
 
     Modifiers are only needed to override default values:
 
-    in_query|in_path|in_body      Where parameter will be read from [default: in_query]
-    required                      Whether parameter is required [default: False (except POST)]
+    in_query|in_path|in_body      Where parameter will be read from. [default: in_query]
+    required                      Whether parameter is required. [default: False (except POST)]
     enum                          The parameter values are limited by a list.
-                                  A list of the same name must be specified within resource namespace
+                                  A list of the same name must be specified within resource namespace.
     -- Responses --
     By default all standard HTTP messages will be available as defined by status codes. They only
     need to be listed here to change the message or to explicitly show the message in the API
@@ -102,34 +101,37 @@ class Docs(object):
             self.__schema__['paths'].update(c.__schema__)
 
     def resource_schema(self, resource):
-        verbs = ['get', 'put', 'post', 'delete']
         schema = {}
+        verbs = ['get', 'put', 'post', 'delete']
+        name = resource.__name__.capitalize()
 
         for verb in verbs:
             method = getattr(resource, 'on_%s' % (verb), None)
+
             if not method:
                 continue
 
             if not method.__doc__:
                 continue
 
-            operation_id = '%s%s' % (verb, resource.__name__.capitalize())
-            description = resource.__name__.capitalize()
+            operation_id = '%s%s' % (verb, name)
+            description = name
             tag = {
-                'name': resource.__name__.lower(),
-                'description': 'Manage %s' % (resource.__name__.capitalize())
+                'name': name.lower(),
+                'description': 'Manage %s' % (name)
             }
             tags = [tag['name']]
             responses = default_responses()
             parameters = []
 
             doc = inspect.cleandoc(method.__doc__)
-            match = re.search(r'(.*?):', doc, re.MULTILINE | re.DOTALL)
 
+            match = re.search(r'(.*?):', doc, re.MULTILINE | re.DOTALL)
             if match:
                 description = match.group(1).replace('\n', ' ')
 
             tokens = self.process_tokens(doc)
+
             for parameter in tokens['param']:
                 parameters.append(self.process_parameter(resource, parameter))
             for response in tokens['response']:
