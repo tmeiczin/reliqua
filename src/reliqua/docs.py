@@ -51,24 +51,12 @@ class Docs(object):
     The return type of the method.
     """
     __schema__ = {
-        'swagger': '2.0',
+        'openapi': '3.0.0',
         'info': {
+            'title': 'application',
             'description': 'application description',
             'version': '0.0.0',
-            'title': 'application',
         },
-        'host': '127.0.0.1:8000',
-        'basePath': '',
-        'schemes': [
-            'http',
-            'https',
-        ],
-        'consumes': [
-            'application/json',
-        ],
-        'produces': [
-            'application/json',
-        ]
     }
 
     def __init__(
@@ -77,7 +65,7 @@ class Docs(object):
             desc=None,
             version=None,
             title=None,
-            host=None,
+            url=None,
             base_path=None):
 
         schema = self.__schema__
@@ -86,9 +74,12 @@ class Docs(object):
         info['description'] = desc or info['description']
         info['version'] = version or info['version']
         info['title'] = title or info['title']
-        schema['host'] = host or schema['host']
-        schema['basePath'] = base_path or schema['basePath']
-
+        schema['servers'] = [
+            {
+                'url': url,
+                'description': 'Default API'
+            }
+        ]
         self.process_resources(resources)
 
     def process_resources(self, resources):
@@ -116,11 +107,7 @@ class Docs(object):
 
             operation_id = '%s%s' % (verb, name)
             description = name
-            tag = {
-                'name': name.lower(),
-                'description': 'Manage %s' % (name)
-            }
-            tags = [tag['name']]
+            tags = [name.lower()]
             responses = default_responses()
             parameters = []
 
@@ -138,7 +125,7 @@ class Docs(object):
                 responses.update(self.process_response(resource, response))
 
             schema[verb] = {
-                'description': description,
+                'summary': description,
                 'operationId': operation_id,
                 'tags': tags,
                 'parameters': parameters,
@@ -188,6 +175,8 @@ class Docs(object):
 
         if token_type == 'str':
             token_type = 'string'
+        if token_type == 'int':
+            token_type = 'integer'
 
         for a in attributes:
             if a.startswith('in_'):
@@ -202,7 +191,9 @@ class Docs(object):
             'in': where,
             'description': description,
             'required': required,
-            'type': token_type,
+            'schema': {
+                'type': token_type
+            }
         }
 
         if enum:

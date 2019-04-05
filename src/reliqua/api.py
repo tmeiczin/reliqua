@@ -3,7 +3,6 @@ import glob
 import imp
 import inspect
 import os
-import re
 import sys
 import uuid
 
@@ -40,13 +39,11 @@ class Api(falcon.API):
         """
         self.doc_endpoint = '/docs'
         self.swagger_file = 'swagger.json'
+        self.url = url
         self.doc_url = url + self.doc_endpoint
         self.desc = desc
         self.title = title
         self.version = version
-        m = re.search(r'http[s]?://(?P<host>.*(:\d+)?)(?P<base_path>[/]?.*)', url).groupdict()
-        self.host = m['host']
-        self.base_path = m['base_path']
 
         path = os.path.dirname(sys.modules[__name__].__file__)
         self.doc_path = path + '/swagger'
@@ -104,8 +101,7 @@ class Api(falcon.API):
         )
         docs = Docs(
             self.resources,
-            host=self.host,
-            base_path=self.base_path,
+            url=self.url,
             version=self.version,
             desc=self.desc,
             title=self.title
