@@ -1,6 +1,6 @@
-This is sample template to create a quick Python Falcon API application. It uses a schema defined in the resource for the route path and swagger documentation. The base application will handle creating the routes and documentation automatically at runtime.
+This is sample template to create a quick Python Falcon API application. It uses a schema defined in the resource for the route path and OpenAPI documentation. The base application will handle creating the routes and documentation automatically at runtime.
 
-You define a resource, then add a schema based on the OpenAPI specification.
+You define a resource and the documentation will be auto-generated at startup using the docstrings.
 
 ```python
 
@@ -43,7 +43,7 @@ class User(Resource):
             resp.status = status.HTTP_400
 ```
 
-This will create the /users/{id} endpoint and swagger documentation. The swagger documentation and swagger.json will be dynamically generate at application startup. The swagger ui will be available at:
+This will create the /users/{id} endpoint and corresponding API documentation. The OpenAPI documentation and swagger.json will be dynamically generate at application startup. The OpenAPI ui will be available at:
 
 ```
 http://<api-url>/docs/
@@ -92,7 +92,7 @@ You can execute the example application
 $ reliqua-example 
 ```
 
-From here the swagger-ui will be available at
+From here the openapi-ui will be available at
 
 ````
 http://localhost:8000/docs/
