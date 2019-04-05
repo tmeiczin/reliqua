@@ -1,4 +1,5 @@
 from reliqua.resources.base import Resource
+from reliqua.status_codes import HTTP 
 
 
 users = [
@@ -39,7 +40,7 @@ class User(Resource):
         try:
             resp.media = users[int(id)]
         except IndexError:
-            resp.status = '404'
+            resp.status = HTTP('404')
 
     def on_delete(self, req, resp, id=None):
         """
@@ -53,7 +54,7 @@ class User(Resource):
             users.pop(int(id))
             resp.media = {'success': True}
         except IndexError:
-            resp.status = '400'
+            resp.status = HTTP('400')
 
 
 class Users(Resource):
@@ -97,7 +98,7 @@ class Users(Resource):
             users.pop(int(p.get(id, None)))
             resp.media = {'success': True}
         except IndexError:
-            resp.status = '400'
+            resp.status = HTTP('400')
 
     def on_post(self, req, resp):
         """
