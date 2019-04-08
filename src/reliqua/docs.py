@@ -95,6 +95,7 @@ class Docs(object):
         schema = {}
         verbs = ['get', 'put', 'post', 'delete']
         name = resource.__name__.capitalize()
+        tags = getattr(resource, '__tags__', [name.lower()])
 
         for verb in verbs:
             method = getattr(resource, 'on_%s' % (verb), None)
@@ -107,7 +108,6 @@ class Docs(object):
 
             operation_id = '%s%s' % (verb, name)
             description = name
-            tags = [name.lower()]
             responses = default_responses()
             parameters = []
 

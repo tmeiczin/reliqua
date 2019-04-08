@@ -1,5 +1,5 @@
 from reliqua.resources.base import Resource
-from reliqua.status_codes import HTTP 
+from reliqua.status_codes import HTTP
 
 
 users = [
@@ -13,7 +13,7 @@ users = [
     }
 ]
 
-phone = ['207-827-0028']
+phone = ['603-555-1234', '603-555-5678']
 
 
 class User(Resource):

@@ -80,7 +80,6 @@ class Api(falcon.API):
     def _get_classes(self, module):
         classes = []
         for n, c in inspect.getmembers(module, inspect.isclass):
-            print 'checking %s' % (n)
             if issubclass(c, Resource) and hasattr(c, '__routes__'):
                 classes.append(c)
 
