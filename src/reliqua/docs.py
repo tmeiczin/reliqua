@@ -1,3 +1,4 @@
+import inflect
 import inspect
 import re
 
@@ -25,7 +26,7 @@ class Docs(object):
 
     :param str username:  [in_path, required] User ID
     :param str email:     [in_query] User Email
-    :param str phone:     [in_query, enum] Phone Numbers
+    :param str phone:     [in_query, enum=phones] Phone Numbers
 
     :response 200:        user was retrieved
     :response 400:        invalid query parameter
@@ -41,7 +42,10 @@ class Docs(object):
     in_query|in_path|in_body      Where parameter will be read from. [default: in_query]
     required                      Whether parameter is required. [default: False (except POST)]
     enum                          The parameter values are limited by a list.
-                                  A list of the same name must be specified within resource namespace.
+                                  The enum values will be retrieved from the resource as follows:
+                                      if in the form enum=<name>, then name
+                                      plural version of parameter name
+                                      singlular version of the parameter name
     -- Responses --
     By default all standard HTTP messages will be available as defined by status codes. They only
     need to be listed here to change the message or to explicitly show the message in the API
@@ -80,6 +84,7 @@ class Docs(object):
                 'description': 'Default API'
             }
         ]
+        self.inflect = inflect.engine()
         self.process_resources(resources)
 
     def process_resources(self, resources):
@@ -183,8 +188,8 @@ class Docs(object):
                 where = a.replace('in_', '')
             if a == 'required':
                 required = True
-            if a == 'enum':
-                enum = getattr(resource, token_name, [])
+            if a.startswith('enum'):
+                enum = self.process_enum(resource, a, token_name)
 
         parameter = {
             'name': token_name,
@@ -192,14 +197,25 @@ class Docs(object):
             'description': description,
             'required': required,
             'schema': {
-                'type': token_type
+                'type': token_type,
             }
         }
 
         if enum:
-            parameter['enum'] = enum
+            parameter['schema']['enum'] = enum
 
         return parameter
+
+    def process_enum(self, resource, enum, token_name):
+        _, _, name = enum.partition('=')
+        if name:
+            enum = getattr(resource, name, [])
+        else:
+            plural = getattr(resource, self.inflect.plural(token_name), [])
+            singular = getattr(resource, token_name, [])
+            enum = plural or singular
+
+        return enum
 
     def on_get(self, req, resp):
         resp.set_header('Access-Control-Allow-Origin', '*')

@@ -22,7 +22,7 @@ class User(Resource):
         '/users/{id}',
     ]
 
-    phone = phone
+    phones = phone
 
     def on_get(self, req, resp, id=None):
         """
@@ -30,7 +30,7 @@ class User(Resource):
 
         :param str id:       [in_path] User ID
         :param str email:    [in_query] User Email
-        :param str phone:    [in_query, enum] Phone Numbers
+        :param str phone:    [in_query, enum=phones] Phone Numbers
 
         :response 200:       user was retrieved
         :response 400:       invalid query paremeter
