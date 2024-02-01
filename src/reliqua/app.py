@@ -1,4 +1,5 @@
-from six.moves import configparser
+import bjoern
+import configparser
 from gunicorn.app.base import BaseApplication
 
 from . api import Api

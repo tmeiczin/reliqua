@@ -13,7 +13,7 @@ from . resources.base import Resource
 from . swagger import Swagger
 
 
-class Api(falcon.API):
+class Api(falcon.App):
     """add auto route and documentation"""
 
     def __init__(
@@ -68,9 +68,12 @@ class Api(falcon.API):
 
     def _load_resources(self):
         self.resources = []
-        files = glob.glob('%s/*.py' % (self.resource_path))
+        path = f"{self.resource_path}/*.py"
+        path = '%s/*.py' % (self.resource_path)
+        print(f"searching {path}")
+        files = glob.glob(path)
         for f in files:
-            print('loading %s' % (f))
+            print(f"loading {f}")
             module_name = str(uuid.uuid3(uuid.NAMESPACE_OID, f))
             module = imp.load_source(module_name, f)
             self.resources.extend(self._get_classes(module))
@@ -88,9 +91,9 @@ class Api(falcon.API):
     def _add_routes(self):
         for resource in self.resources:
             routes = getattr(resource, '__routes__')
-            for route in routes:
-                print('adding route %s' % (route))
-                self.add_route(route, resource())
+            for route, kwargs in routes.items():
+                print(f"adding route {route} {kwargs}")
+                self.add_route(route, resource(), **kwargs)
 
     def _add_docs(self):
         swagger = Swagger(

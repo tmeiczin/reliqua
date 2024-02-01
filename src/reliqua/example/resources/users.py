@@ -18,13 +18,13 @@ phone = ['603-555-1234', '603-555-5678']
 
 class User(Resource):
 
-    __routes__ = [
-        '/users/{id}',
-    ]
+    __routes__ = {
+        "/users/{id}": {"suffix": "by_id"},
+    }
 
     phones = phone
 
-    def on_get(self, req, resp, id=None):
+    def on_get_by_id(self, req, resp, id=None):
         """
         Retrieve a user.
 
@@ -42,7 +42,7 @@ class User(Resource):
         except IndexError:
             resp.status = HTTP('404')
 
-    def on_delete(self, req, resp, id=None):
+    def on_delete_by_id(self, req, resp, id=None):
         """
         Delete a user.
 
@@ -59,9 +59,10 @@ class User(Resource):
 
 class Users(Resource):
 
-    __routes__ = [
-        '/users',
-    ]
+    __routes__ = {
+        '/users': {},
+        '/employees': {},
+    }
 
     def on_get(self, req, resp):
         """
