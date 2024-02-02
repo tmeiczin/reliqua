@@ -1,16 +1,15 @@
-import bjoern
 import configparser
 from gunicorn.app.base import BaseApplication
 
-from . api import Api
-from . middleware import ProcessParams
+from .api import Api
+from .middleware import ProcessParams
 
 
 def load_config(config_file):
     params = {}
 
     try:
-        section = 'config'
+        section = "config"
         config = configparser.ConfigParser()
         config.read(config_file)
 
@@ -28,16 +27,17 @@ class Application(BaseApplication):
     """
 
     def __init__(
-            self,
-            bind=None,
-            proxy_api_url=None,
-            workers=None,
-            resource_path=None,
-            loglevel=None,
-            middleware=None,
-            version=None,
-            desc=None,
-            title=None):
+        self,
+        bind=None,
+        proxy_api_url=None,
+        workers=None,
+        resource_path=None,
+        loglevel=None,
+        middleware=None,
+        version=None,
+        desc=None,
+        title=None,
+    ):
         """
         Application init method
 
@@ -56,26 +56,28 @@ class Application(BaseApplication):
         middleware = middleware or []
 
         options = {
-            'bind': '127.0.0.1:8000',
-            'workers': 5,
-            'proxy_api_url': None,
-            'resource_path': 'resource',
-            'loglevel': 'info'
+            "bind": "127.0.0.1:8000",
+            "workers": 5,
+            "proxy_api_url": None,
+            "resource_path": "resource",
+            "loglevel": "info",
         }
 
-        proxy_api_url = proxy_api_url or options['proxy_api_url']
-        resource_path = resource_path or options['resource_path'],
+        proxy_api_url = proxy_api_url or options["proxy_api_url"]
+        resource_path = (resource_path or options["resource_path"],)
 
         self.gunicorn_options = {
-            'bind': bind or options['bind'],
-            'workers': workers or options['workers'],
-            'loglevel': loglevel or options['loglevel']
+            "bind": bind or options["bind"],
+            "workers": workers or options["workers"],
+            "loglevel": loglevel or options["loglevel"],
         }
 
         middleware.append(ProcessParams())
 
         # trim slashes from proxy URL if specified; otherwise set default proxy url
-        proxy_api_url = proxy_api_url.rstrip('/') if proxy_api_url else 'http://%s' % (bind)
+        proxy_api_url = (
+            proxy_api_url.rstrip("/") if proxy_api_url else "http://%s" % (bind)
+        )
 
         self.application = Api(
             url=proxy_api_url,
@@ -83,7 +85,7 @@ class Application(BaseApplication):
             middleware=middleware,
             version=version,
             desc=desc,
-            title=title
+            title=title,
         )
 
         super(Application, self).__init__()

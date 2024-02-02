@@ -13,16 +13,22 @@ users = [
     }
 ]
 
-phone = ['603-555-1234', '603-555-5678']
+phones = ['603-555-1234', '603-555-5678']
 
 
 class User(Resource):
 
     __routes__ = {
-        "/users/{id}": {"suffix": "by_id"},
+        "/users/{id}": {
+            "suffix": "by_id"
+        },
     }
 
-    phones = phone
+    __tags__ = [
+       "users",
+    ]
+
+    phones = phones
 
     def on_get_by_id(self, req, resp, id=None):
         """
@@ -64,11 +70,15 @@ class Users(Resource):
         '/employees': {},
     }
 
+    __tags__ = [
+       "users",
+    ]
+
     def on_get(self, req, resp):
         """
         Retrieve a user
 
-        :param str username:      [in_query]  Username
+        :param str username:      [in_query required]  Username
         :param str email:         [in_query]  Email
 
         :return json:

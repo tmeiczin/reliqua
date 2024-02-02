@@ -1,15 +1,12 @@
-import inflect
-import inspect
-import re
 
 
 def default_responses():
     default_responses = {
-        '200': {
-            'description': 'Successful operation',
+        "200": {
+            "description": "Successful operation",
         },
-        '400': {
-            'description': 'Bad input values',
+        "400": {
+            "description": "Bad input values",
         },
     }
     return default_responses
@@ -54,169 +51,10 @@ class Docs(object):
     -- Return --
     The return type of the method.
     """
-    __schema__ = {
-        'openapi': '3.0.0',
-        'info': {
-            'title': 'application',
-            'description': 'application description',
-            'version': '0.0.0',
-        },
-    }
 
-    def __init__(
-            self,
-            resources,
-            desc=None,
-            version=None,
-            title=None,
-            url=None,
-            base_path=None):
-
-        schema = self.__schema__
-        schema['paths'] = {}
-        info = schema['info']
-        info['description'] = desc or info['description']
-        info['version'] = version or info['version']
-        info['title'] = title or info['title']
-        schema['servers'] = [
-            {
-                'url': url,
-                'description': 'Default API'
-            }
-        ]
-        self.inflect = inflect.engine()
-        self.process_resources(resources)
-
-    def process_resources(self, resources):
-        for c in resources:
-            c.__schema__ = {}
-            schema = self.resource_schema(c)
-            for route in c.__routes__:
-                c.__schema__[route] = schema
-
-            self.__schema__['paths'].update(c.__schema__)
-
-    def resource_schema(self, resource):
-        schema = {}
-        verbs = ['get', 'put', 'post', 'delete']
-        name = resource.__name__.capitalize()
-        tags = getattr(resource, '__tags__', [name.lower()])
-
-        for verb in verbs:
-            method = getattr(resource, 'on_%s' % (verb), None)
-
-            if not method:
-                continue
-
-            if not method.__doc__:
-                continue
-
-            operation_id = '%s%s' % (verb, name)
-            description = name
-            responses = default_responses()
-            parameters = []
-
-            doc = inspect.cleandoc(method.__doc__)
-
-            match = re.search(r'(.*?):', doc, re.MULTILINE | re.DOTALL)
-            if match:
-                description = match.group(1).replace('\n', ' ')
-
-            tokens = self.process_tokens(doc)
-
-            for parameter in tokens['param']:
-                parameters.append(self.process_parameter(resource, parameter))
-            for response in tokens['response']:
-                responses.update(self.process_response(resource, response))
-
-            schema[verb] = {
-                'summary': description,
-                'operationId': operation_id,
-                'tags': tags,
-                'parameters': parameters,
-                'responses': responses
-            }
-
-        return schema
-
-    def request_body(self, resource, p):
-        pass
-
-    def process_tokens(self, doc):
-        tokens = {
-            'param': [],
-            'response': [],
-            'return': []
-        }
-        for token in tokens.keys():
-            matches = re.finditer(r'^:(?P<token>%s)\s+(?P<token_fields>.*):\s+(?P<desc>[^:]*)' % (token,), doc, re.MULTILINE)
-            tokens[token] = [x.groupdict() for x in matches]
-
-        return tokens
-
-    def process_response(self, resource, r):
-        response_code = r['token_fields']
-        desc = r['desc']
-        response = {
-            response_code: {
-                'description': desc
-            }
-        }
-
-        return response
-
-    def process_parameter(self, resource, p):
-        required = False
-        enum = None
-        attributes = []
-        where = 'query'
-        description = p['desc']
-
-        token_type, token_name = p['token_fields'].split()
-        match = re.match(r'\[(.*)\]\s+(.*)', p['desc'])
-        if match:
-            attributes, description = match.groups()
-            attributes = re.split(r',\s+', attributes)
-
-        if token_type == 'str':
-            token_type = 'string'
-        if token_type == 'int':
-            token_type = 'integer'
-
-        for a in attributes:
-            if a.startswith('in_'):
-                where = a.replace('in_', '')
-            if a == 'required':
-                required = True
-            if a.startswith('enum'):
-                enum = self.process_enum(resource, a, token_name)
-
-        parameter = {
-            'name': token_name,
-            'in': where,
-            'description': description,
-            'required': required,
-            'schema': {
-                'type': token_type,
-            }
-        }
-
-        if enum:
-            parameter['schema']['enum'] = enum
-
-        return parameter
-
-    def process_enum(self, resource, enum, token_name):
-        _, _, name = enum.partition('=')
-        if name:
-            enum = getattr(resource, name, [])
-        else:
-            plural = getattr(resource, self.inflect.plural(token_name), [])
-            singular = getattr(resource, token_name, [])
-            enum = plural or singular
-
-        return enum
+    def __init__(self, schema):
+        self.schema = schema
 
     def on_get(self, req, resp):
-        resp.set_header('Access-Control-Allow-Origin', '*')
-        resp.media = self.__schema__
+        resp.set_header("Access-Control-Allow-Origin", "*")
+        resp.media = self.schema

@@ -1,9 +1,5 @@
-import inspect
 import re
-import json
-import yaml
 
-# from . resources.base import Resource
 from reliqua.sphinx_parser import SphinxParser
 
 
@@ -18,102 +14,6 @@ def camelcase(string):
     return "".join(
         word.title() if i else word for i, word in enumerate(string.split("_"))
     )
-
-
-class User:
-    """User endpoint."""
-
-    __routes__ = {
-        "/users/{id}": {"suffix": "by_id"},
-        "/users": {},
-    }
-
-    __tags__ = [
-        "users",
-    ]
-
-    # set class attribute phone to the module attribute, so enum can be used
-    phone = ["603-555-1234", "603-555-5678"]
-    users = []
-
-    def on_get_by_id(self, req, resp, id=None):
-        """
-        Retrieve a user.
-
-        Retrieves a user from the database.
-
-        :param str id:       [in_path, required] User ID
-        :param str filter:   [enum=filters] Filter for users
-        :response 200:       Successful operation
-        :response 404:       User not found
-        :return json:
-        """
-        resp.media = self.users[int(id)]
-
-    def on_get(self, req, resp, id=None):
-        """
-        Retrieve a user.
-
-        Retrieves a user from the database.
-
-        :param str id:       [in_path, required] User ID
-        :param str filter:   [enum=filters] Filter for users
-        :response 200:       Successful operation
-        :response 404:       User not found
-        :return json:
-        """
-        unused([req])
-        try:
-            if id:
-                resp.media = self.users[int(id)]
-            else:
-                resp.media = self.users
-        except IndexError:
-            resp.status = HTTP("404")
-
-    def on_put(self, req, resp, id=None):
-        """
-        Update user.
-
-        Update user information.
-
-        :param str id:       [in_body, required] User ID
-        :param str name:     [in_body, required] User Name
-        :param str filter:   [enum=filters] Filter for users
-        :response 200:       Successful operation
-        :response 404:       User not found
-        :return json:
-        """
-        unused([req])
-        try:
-            if id:
-                resp.media = self.users[int(id)]
-            else:
-                resp.media = self.users
-        except IndexError:
-            resp.status = HTTP("404")
-
-    @property
-    def filters(self):
-        """Return filters - example of dynamic enum."""
-        return [random.randint(0, 100), random.randint(0, 100)]
-
-    def on_delete(self, req, resp, id=None):
-        """
-        Delete a user.
-
-        Deletes a user from the database.
-
-        :param str id:       [in_path, required] User Id
-        :response 200:       Successful operation
-        :return json:
-        """
-        unused([req])
-        try:
-            self.users.pop(int(id))
-            resp.media = {"success": True}
-        except IndexError:
-            resp.status = HTTP("404")
 
 
 CONTENT_MAP = {
@@ -324,7 +224,7 @@ class ResourceSchema:
         self.routes = resource.__routes__
         self.name = resource.__class__.__name__.capitalize()
         self.tags = getattr(resource, "__tags__", [self.name.lower()])
-        self.security = security = {
+        self.security = {
             verb.lower(): auth
             for verb, auth in getattr(resource, "__auth__", {}).items()
         }
@@ -343,6 +243,13 @@ class ResourceSchema:
     def parse(self):
         self.process_routes()
 
+    def process_parameters(self, operation):
+        for parameter in operation["parameters"]:
+            enum = parameter["enum"]
+            parameter["enum"] = getattr(self.resource, enum) if enum else []
+
+        return operation
+
     def process_routes(self):
         for route, values in self.routes.items():
             operations = values.get("operations")
@@ -355,10 +262,13 @@ class ResourceSchema:
         self.paths[route] = {}
 
         for action in operations:
-            method = f"on_{action}_{suffix}" if suffix else f"on_{action}"
-            if not (method := getattr(self.resource, method, None)):
+            method_name = f"on_{action}_{suffix}" if suffix else f"on_{action}"
+            if not (method := getattr(self.resource, method_name, None)):
                 continue
-            data = parser.parse(method)
+            name = re.sub(r"[{}]", "", camelcase(route.replace("/", "_")))
+            operation_id = f"{name}.{method_name}"
+            data = parser.parse(method, operation_id=operation_id)
+            data = self.process_parameters(data)
             operation = Operation(tags=self.tags, **data)
             self.paths[route].update(operation.dict())
 
@@ -467,20 +377,3 @@ class OpenApi:
             "paths": self.paths,
             "components": self.components,
         }
-
-
-schema = OpenApi(
-    title="Demo",
-    description="Example OpenAPI",
-    version="1.2.3",
-    license="Apache 2.0",
-    license_url="http://foo.com",
-    contact_name="Terrence Meiczinger",
-)
-schema.process_resources([User])
-# print(schema.methods())
-# parser = SphinxParser(docstring)
-# path = parser.parse()
-output = json.dumps(schema.schema(), indent=4)
-# output = yaml.dump(schema.schema())
-print(output)

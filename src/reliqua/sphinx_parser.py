@@ -9,27 +9,29 @@ PARAM_ITER_REGEX = re.compile(
     r"^(:param.*?:.*?)(?:(?=:param)|(?=:return)|(?=:response)|(?=:accepts))",
     re.MULTILINE | re.DOTALL,
 )
-RESPONSE_ITER_REGEX = re.compile(r":response\s+(?P<code>\d+)\s*(?P<content>\w+)?:\s+(?P<description>\w+)")
+RESPONSE_ITER_REGEX = re.compile(
+    r":response\s+(?P<code>\d+)\s*(?P<content>\w+)?:\s+(?P<description>\w+)"
+)
 RETURN_REGEX = re.compile(r"return\s+(\w+):|:return:\s+(\w+)")
 ACCEPT_REGEX = re.compile(r"accepts\s+(\w+):|:accepts:\s+(\w+)")
 OPTION_REGEX = {
     "location": r"in_(?P<location>\w+)",
 }
 KEYVALUE_REGEX = re.compile(r"(?P<key>\w+)=(?P<value>\w+)")
-OPERATION_REGEX  = re.compile(r"on_(delete|get|patch|post|put)")
+OPERATION_REGEX = re.compile(r"on_(delete|get|patch|post|put)")
 
 
 class SphinxParser:
 
     def __init__(self):
-        self.doc = ''
+        self.doc = ""
 
     @staticmethod
     def parse_options(string):
         options = {
-            'location': None,
-            'enum': [],
-            'required': False,
+            "location": None,
+            "enum": [],
+            "required": False,
         }
 
         for option, regex in OPTION_REGEX.items():
@@ -97,12 +99,12 @@ class SphinxParser:
 
     @property
     def responses(self):
-        _responses = [] 
-        default_type = 'json' 
+        _responses = []
+        default_type = "json"
 
         for item in RESPONSE_ITER_REGEX.finditer(self.doc):
             response = item.groupdict()
-            response['content'] = response.get('content') or default_type
+            response["content"] = response.get("content") or default_type
             _responses.append(response)
 
         return _responses
@@ -116,28 +118,31 @@ class SphinxParser:
 
     @staticmethod
     def generate_operation_id(method):
-       return method.__qualname__
+        return method.__qualname__
 
     @staticmethod
     def parse_operation(method):
-       m = re.search(OPERATION_REGEX, method.__qualname__)
-       if m:
-           return m.group(1)
+        m = re.search(OPERATION_REGEX, method.__qualname__)
+        if m:
+            return m.group(1)
 
-       return None
+        return None
+
+    def process_enum(self, resource, enum):
+        return getattr(resource, enum)
 
     def parse(self, method, operation=None, operation_id=None):
         self.doc = inspect.cleandoc(method.__doc__)
         operation = operation or self.parse_operation(method)
-        operation_id = operation_id or self.generate_operation_id(method) 
+        operation_id = operation_id or self.generate_operation_id(method)
 
         return {
-            'operation': operation, 
-            'operation_id': operation_id,
-            'summary': self.summary,
-            'description': self.description,
-            'parameters': self.parameters,
-            'responses': self.responses,
-            'return_type': self.content,
-            'accepts': self.accepts,
+            "operation": operation,
+            "operation_id": operation_id,
+            "summary": self.summary,
+            "description": self.description,
+            "parameters": self.parameters,
+            "responses": self.responses,
+            "return_type": self.content,
+            "accepts": self.accepts,
         }
