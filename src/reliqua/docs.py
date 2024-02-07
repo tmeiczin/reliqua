@@ -1,5 +1,3 @@
-
-
 def default_responses():
     default_responses = {
         "200": {

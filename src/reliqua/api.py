@@ -109,8 +109,7 @@ class Api(falcon.App):
         )
         openapi.process_resources(self.resources)
         schema = openapi.schema()
-        docs = Docs(schema)
-
+        print(f"adding docs {self.doc_endpoint} {self.doc_path}")
         self.add_static_route(self.doc_endpoint, self.doc_path)
         self.add_route(self.doc_endpoint, swagger)
-        self.add_route(self.doc_endpoint + "/" + self.swagger_file, docs)
+        self.add_route(self.doc_endpoint + "/" + self.swagger_file, Docs(schema))
