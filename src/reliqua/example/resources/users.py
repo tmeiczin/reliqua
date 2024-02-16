@@ -34,9 +34,9 @@ class User(Resource):
         """
         Retrieve a user.
 
-        :param str id:       [in_path] User ID
+        :param str id:       [in_path, required] User ID
         :param str email:    [in_query] User Email
-        :param str phone:    [in_query, enum=phones] Phone Numbers
+        :param str|int phone:    [in_query, enum=phones] Phone Numbers
 
         :response 200:       user was retrieved
         :response 400:       invalid query paremeter
@@ -52,7 +52,7 @@ class User(Resource):
         """
         Delete a user.
 
-        :param str id:      [in_path, required] User Id
+        :param str id:      [in_path] User Id
 
         :return json:
         """
@@ -79,12 +79,13 @@ class Users(Resource):
         Retrieve a user
 
         :param str username:      [in_query required]  Username
-        :param str email:         [in_query]  Email
+        :param str email:         [in_query default=terrence.meiczinger@hpe.com]  Email
 
         :return json:
         """
         results = []
         p = req.params
+        print(p)
         if any(p.values()):
             for user in users:
                 if user['username'] == p.get('username', None):

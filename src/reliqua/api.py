@@ -10,6 +10,7 @@ from falcon_cors import CORS
 
 from .docs import Docs
 from .openapi import OpenApi
+from .sphinx_parser import SphinxParser
 from .resources.base import Resource
 from .swagger import Swagger
 
@@ -46,6 +47,7 @@ class Api(falcon.App):
         self.desc = desc
         self.title = title
         self.version = version
+        self.resources = []
 
         path = os.path.dirname(sys.modules[__name__].__file__)
         self.doc_path = path + "/swagger"
@@ -65,6 +67,7 @@ class Api(falcon.App):
         self.resource_path = resource_path
 
         self._load_resources()
+        self._parse_docstrings()
         self._add_routes()
         self._add_docs()
 
@@ -74,16 +77,31 @@ class Api(falcon.App):
         path = "%s/*.py" % (self.resource_path)
         print(f"searching {path}")
         files = glob.glob(path)
-        for f in files:
-            print(f"loading {f}")
-            module_name = str(uuid.uuid3(uuid.NAMESPACE_OID, f))
-            module = imp.load_source(module_name, f)
-            resources.extend(self._get_classes(module))
 
-        self.resources = [x() for x in resources if hasattr(x, "__routes__")]
+        for file in files:
+            print(f"loading {file}")
+            classes = self._get_classes(file)
+            resources.extend(classes)
 
-    def _get_classes(self, module):
+        self.resources = [x() for x in resources]
+
+    def _parse_docstrings(self):
+        parser = SphinxParser()
+        for resource in self.resources:
+            resource.__data__ = {}
+            methods = [x for x in dir(resource) if x.startswith("on_")]
+            for name in methods:
+                operation_id = f"{resource.__class__.__name__}.{name}"
+                method = getattr(resource, name)
+                resource.__data__[name] = parser.parse(
+                    method, operation_id=operation_id
+                )
+
+    def _get_classes(self, filename):
         classes = []
+        module_name = str(uuid.uuid3(uuid.NAMESPACE_OID, filename))
+        module = imp.load_source(module_name, filename)
+
         for n, c in inspect.getmembers(module, inspect.isclass):
             if issubclass(c, Resource) and hasattr(c, "__routes__"):
                 classes.append(c)

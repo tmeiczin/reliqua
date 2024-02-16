@@ -1,7 +1,5 @@
 import re
 
-from reliqua.sphinx_parser import SphinxParser
-
 
 def camelcase(string):
     """
@@ -47,7 +45,7 @@ class Parameter:
     def __init__(
         self,
         name=None,
-        kind=None,
+        datatype=None,
         location=None,
         required=None,
         default=None,
@@ -70,23 +68,45 @@ class Parameter:
         self.min = min
         self.max = max
         self.example = example
-        self.kind = kind
+        self._datatype = datatype
 
     @property
-    def kind(self):
-        return self._kind
-
-    @kind.setter
-    def kind(self, value):
+    def datatype(self):
+        value = self._datatype
         a, _, b = value.partition("|")
-        self._kind = f"{TYPE_MAP[a]}|{TYPE_MAP[b]}" if b else f"{TYPE_MAP[a]}"
+
+        # handle defined list type ex: list[str]
+        if re.search(r"list\[(\w+)]", a):
+            a = "list"
+
+        return f"{TYPE_MAP[a]}|{TYPE_MAP[b]}" if b else f"{TYPE_MAP[a]}"
+
+    @property
+    def items_type(self):
+        """
+        Return a list item type.
+
+        Return the list type when a parameter type is
+        of the form list[type], such as list[int]
+
+        :return str:     The list item type
+        """
+        if "list" not in self.datatype:
+            return None
+
+        if m := re.search(r"list\[(\w+)]", self.datatype):
+            return TYPE_MAP[m.group(1)]
+
+        return None
 
     def __repr__(self):
         return str(self.__dict__)
 
     @property
     def schema(self):
-        _schema = {"type": self.kind, "format": self.format or self.kind}
+        _schema = {"type": self.datatype, "format": self.format or self.datatype}
+        if self.items_type:
+            _schema["items"] = {"type": self.items_type, "format": self.format}
         for x in ["enum", "min", "max", "default", "example"]:
             if value := getattr(self, x):
                 _schema[x] = value
@@ -219,7 +239,7 @@ class Operation:
 
 class ResourceSchema:
 
-    def __init__(self, resource):
+    def __init__(self, resource, parser=None):
         self.resource = resource
         self.routes = resource.__routes__
         self.name = resource.__class__.__name__.capitalize()
@@ -228,6 +248,7 @@ class ResourceSchema:
             verb.lower(): auth
             for verb, auth in getattr(resource, "__auth__", {}).items()
         }
+        self.parser = parser() if parser else None
         self.paths = {}
 
     def methods(self):
@@ -257,20 +278,15 @@ class ResourceSchema:
             self.process_route(route, operations=operations, suffix=suffix)
 
     def process_route(self, route, operations=None, suffix=None):
-        parser = SphinxParser()
         operations = operations or verbs
         self.paths[route] = {}
 
-        for action in operations:
-            method_name = f"on_{action}_{suffix}" if suffix else f"on_{action}"
-            if not (method := getattr(self.resource, method_name, None)):
-                continue
-            name = re.sub(r"[{}]", "", camelcase(route.replace("/", "_")))
-            operation_id = f"{name}.{method_name}"
-            data = parser.parse(method, operation_id=operation_id)
-            data = self.process_parameters(data)
+        for k, v in self.resource.__data__.items():
+            data = self.process_parameters(v)
             operation = Operation(tags=self.tags, **data)
             self.paths[route].update(operation.dict())
+
+        return
 
 
 class Info:

@@ -3,7 +3,7 @@ import re
 
 
 PARAM_REGEX = re.compile(
-    r":param\s+(?P<kind>[|\w]+)\s+(?P<name>[\S+]+):\s+(\[(?P<options>.*)\])?\s+(?P<description>.*)"
+    r":param\s+(?P<datatype>[\[\]|\w]+)\s+(?P<name>[\S+]+):\s+(\[(?P<options>.*)\])?\s+(?P<description>.*)"
 )
 PARAM_ITER_REGEX = re.compile(
     r"^(:param.*?:.*?)(?:(?=:param)|(?=:return)|(?=:response)|(?=:accepts))",
