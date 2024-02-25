@@ -13,6 +13,7 @@ from .openapi import OpenApi
 from .sphinx_parser import SphinxParser
 from .resources.base import Resource
 from .swagger import Swagger
+from .media_handlers import JSONHandler, TextHandler, YAMLHandler
 
 
 class Api(falcon.App):
@@ -66,10 +67,22 @@ class Api(falcon.App):
         self.req_options.auto_parse_form_urlencoded = True
         self.resource_path = resource_path
 
+        self._add_handlers()
         self._load_resources()
         self._parse_docstrings()
         self._add_routes()
         self._add_docs()
+
+    def _add_handlers(self):
+        extra_handlers = {
+            "application/yaml": YAMLHandler(),
+            "text/html; charset=utf-8": TextHandler(),
+            "text/plain; charset=utf-8": TextHandler(),
+            "application/json": JSONHandler(),
+        }
+
+        self.req_options.media_handlers.update(extra_handlers)
+        self.resp_options.media_handlers.update(extra_handlers)
 
     def _load_resources(self):
         resources = []
@@ -92,8 +105,9 @@ class Api(falcon.App):
             methods = [x for x in dir(resource) if x.startswith("on_")]
             for name in methods:
                 operation_id = f"{resource.__class__.__name__}.{name}"
+                action = name.replace("on_", "")
                 method = getattr(resource, name)
-                resource.__data__[name] = parser.parse(
+                resource.__data__[action] = parser.parse(
                     method, operation_id=operation_id
                 )
 

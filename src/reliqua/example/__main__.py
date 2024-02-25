@@ -1,7 +1,6 @@
 import argparse
 import os
 import sys
-from multiprocessing import cpu_count
 
 from reliqua import Application, load_config
 
@@ -10,7 +9,7 @@ def main():
     bind_address = '127.0.0.01'
     bind_port = 8000
     proxy_api_url = None
-    workers = (cpu_count() * 2) + 1
+    workers = 2 
     parser = argparse.ArgumentParser()
     resource_path = os.path.abspath(os.path.dirname(
         sys.modules[__name__].__file__)) + '/resources'

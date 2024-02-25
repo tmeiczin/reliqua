@@ -20,7 +20,7 @@ def get_params_from_openapi(request, resource):
         if suffix := route.get("suffix"):
             method = f"on_{method}_{suffix}"
         params = resource.__data__[method]["parameters"]
-    except (TypeError, AttributeError, KeyError):
+    except (TypeError, AttributeError, KeyError) as exc:
         params = []
 
     return [Parameter(**x) for x in params]
@@ -146,11 +146,9 @@ class Converter:
     @staticmethod
     # def convert(req, name, datatype, default=None, required=False, transform=None):
     def convert(req, parameter, transform=None):
-        print(f"{parameter.name} converting as_{parameter.datatype}")
         converter = getattr(Converter, f"as_{parameter.datatype}", Converter.as_string)
         # transform = transform or Converter.transforms.get(parameter.datatype, str)
-        print(f"list transform {transform}")
-        default = transform(parameter.default) if parameter.default else None
+        default = transform(parameter.default) if transform and parameter.default else None
 
         return converter(
             req,
@@ -208,7 +206,6 @@ class ProcessParams:
 
         # use the docs schema to validate
         for parameter in parameters:
-            print(f"checking {parameter.name}")
             present = parameter.name in request.params
 
             # check for required parameters
@@ -216,7 +213,6 @@ class ProcessParams:
 
             # if parameter is not required, not specified, and has no default, move on
             if not present and not parameter.default:
-                print("no value")
                 continue
 
             # for operators in and between, datatype must be a list
@@ -228,7 +224,6 @@ class ProcessParams:
                 parameter.datatype = "list"
                 transform = m.group(1)
 
-            print("calling converter")
             request.params[parameter.name] = Converter.convert(
                 request,
                 parameter,

@@ -266,7 +266,7 @@ class ResourceSchema:
 
     def process_parameters(self, operation):
         for parameter in operation["parameters"]:
-            enum = parameter["enum"]
+            enum = parameter.get("enum")
             parameter["enum"] = getattr(self.resource, enum) if enum else []
 
         return operation

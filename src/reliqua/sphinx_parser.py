@@ -32,6 +32,8 @@ class SphinxParser:
             "location": None,
             "enum": [],
             "required": False,
+            "min": None,
+            "max": None,
         }
 
         for option, regex in OPTION_REGEX.items():

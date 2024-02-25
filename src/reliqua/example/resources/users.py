@@ -78,7 +78,7 @@ class Users(Resource):
         """
         Retrieve a user
 
-        :param str username:      [in_query required]  Username
+        :param str username:      [in_query]  Username
         :param str email:         [in_query default=terrence.meiczinger@hpe.com]  Email
 
         :return json:
