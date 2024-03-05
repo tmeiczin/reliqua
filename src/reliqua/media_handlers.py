@@ -1,3 +1,9 @@
+"""
+Reliqua Framework.
+
+Copyright 2016-2024.
+"""
+
 import json
 from datetime import date, datetime, time
 from functools import partial
@@ -8,20 +14,17 @@ from falcon.media import BaseHandler
 from falcon.media import JSONHandler as FalconJSONHandler
 from yaml import SafeLoader
 
-from pxops.util import unused
-
 
 class YAMLHandler(BaseHandler):
     """Media handler class for YAML."""
 
-    def deserialize(self, stream, content_type, content_length):
+    def deserialize(self, stream, _content_type, _content_length):
         """
         Load YAML from stream and return the appropriate Python object.
 
         :param stream:      stream to load from
         :return:            deserialized YAML as python object
         """
-        unused([content_type, content_length])
         try:
             return yaml.load(stream.read().decode("utf-8"), SafeLoader)
         except ValueError as exception:
@@ -30,14 +33,13 @@ class YAMLHandler(BaseHandler):
                 description=f"Could not parse YAML body: {exception}",
             ) from exception
 
-    def serialize(self, media, content_type):
+    def serialize(self, media, _content_type):
         """
         Serialize media to YAML.
 
         :param media:       media to serialize
         :return:            serialized YAML
         """
-        unused([content_type])
         result = yaml.dump(media)
 
         try:
@@ -51,14 +53,13 @@ class YAMLHandler(BaseHandler):
 class TextHandler(BaseHandler):
     """Media handler class for text."""
 
-    def deserialize(self, stream, content_type, content_length):
+    def deserialize(self, stream, _content_type, _content_length):
         """
         Read text from stream.
 
         :param stream:      stream to load from
         :return:            text
         """
-        unused([content_type, content_length])
         try:
             return stream.read().decode("utf-8")
         except ValueError as exception:
@@ -66,20 +67,18 @@ class TextHandler(BaseHandler):
                 title="Invalid Text", description=f"Could not parse body: {exception}"
             ) from exception
 
-    def serialize(self, media, content_type):
+    def serialize(self, media, _content_type):
         """
         Serialize media to text.
 
         :param media:       media to serialize
         :return:            serialized text
         """
-        unused([content_type])
         result = f"{media}"
 
         try:
             result = result.encode("utf-8")
         except AttributeError:
-            print("crap")
             pass
 
         return result

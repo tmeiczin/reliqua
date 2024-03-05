@@ -1,6 +1,11 @@
+"""
+Reliqua Framework.
+
+Copyright 2016-2024.
+"""
+
 import inspect
 import re
-
 
 PARAM_REGEX = re.compile(
     r":param\s+(?P<datatype>[\[\]|\w]+)\s+(?P<name>[\S+]+):\s+(\[(?P<options>.*)\])?\s+(?P<description>.*)"
@@ -9,9 +14,7 @@ PARAM_ITER_REGEX = re.compile(
     r"^(:param.*?:.*?)(?:(?=:param)|(?=:return)|(?=:response)|(?=:accepts))",
     re.MULTILINE | re.DOTALL,
 )
-RESPONSE_ITER_REGEX = re.compile(
-    r":response\s+(?P<code>\d+)\s*(?P<content>\w+)?:\s+(?P<description>\w+)"
-)
+RESPONSE_ITER_REGEX = re.compile(r":response\s+(?P<code>\d+)\s*(?P<content>\w+)?:\s+(?P<description>\w+)")
 RETURN_REGEX = re.compile(r"return\s+(\w+):|:return:\s+(\w+)")
 ACCEPT_REGEX = re.compile(r"accepts\s+(\w+):|:accepts:\s+(\w+)")
 OPTION_REGEX = {
@@ -19,9 +22,16 @@ OPTION_REGEX = {
 }
 KEYVALUE_REGEX = re.compile(r"(?P<key>\w+)=(?P<value>\w+)")
 OPERATION_REGEX = re.compile(r"on_(delete|get|patch|post|put)")
+SUFFIX_REGEX = re.compile(r"on_(?:delete|get|patch|post|put)_([a-zA-Z0-9_]+)")
 
 
 class SphinxParser:
+    """
+    Sphinx docstring parser.
+
+    This class contains methods to parse resource's method docstring and create
+    a structures schema.
+    """
 
     def __init__(self):
         self.doc = ""
@@ -44,9 +54,7 @@ class SphinxParser:
             items = match.groupdict()
             options[items["key"]] = items["value"]
 
-        options["required"] = (
-            True if "required" in string and "optional" not in string else False
-        )
+        options["required"] = True if "required" in string and "optional" not in string else False
 
         return options
 
@@ -130,6 +138,14 @@ class SphinxParser:
 
         return None
 
+    @staticmethod
+    def _parse_suffix(method):
+        m = re.search(SUFFIX_REGEX, method.__qualname__)
+        if m:
+            return m.group(1)
+
+        return None
+
     def process_enum(self, resource, enum):
         return getattr(resource, enum)
 
@@ -137,10 +153,12 @@ class SphinxParser:
         self.doc = inspect.cleandoc(method.__doc__)
         operation = operation or self.parse_operation(method)
         operation_id = operation_id or self.generate_operation_id(method)
+        suffix = self._parse_suffix(method)
 
         return {
             "operation": operation,
             "operation_id": operation_id,
+            "suffix": suffix,
             "summary": self.summary,
             "description": self.description,
             "parameters": self.parameters,

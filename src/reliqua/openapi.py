@@ -1,3 +1,9 @@
+"""
+Reliqua Framework.
+
+Copyright 2016-2024.
+"""
+
 import re
 
 
@@ -6,12 +12,9 @@ def camelcase(string):
     Convert underscore names to camel case.
 
     :param str string:        String to convert
-    :return:                  Camel case string
-    :rtype:                   str
+    :return str:              Camel case string
     """
-    return "".join(
-        word.title() if i else word for i, word in enumerate(string.split("_"))
-    )
+    return "".join(word.title() if i else word for i, word in enumerate(string.split("_")))
 
 
 CONTENT_MAP = {
@@ -42,6 +45,12 @@ verbs = ["get", "patch", "put", "post", "delete"]
 
 
 class Parameter:
+    """
+    OpenAPI Parameter class.
+
+    This class represents an OpenAPI parameter.
+    """
+
     def __init__(
         self,
         name=None,
@@ -91,10 +100,10 @@ class Parameter:
 
         :return str:     The list item type
         """
-        if "list" not in self.datatype:
+        if not self._datatype:
             return None
 
-        if m := re.search(r"list\[(\w+)]", self.datatype):
+        if m := re.search(r"(?:list|array)\[(\w+)\]", self._datatype):
             return TYPE_MAP[m.group(1)]
 
         return None
@@ -104,9 +113,10 @@ class Parameter:
 
     @property
     def schema(self):
-        _schema = {"type": self.datatype, "format": self.format or self.datatype}
+        _schema = {"type": self.datatype}
+        # _schema = {"type": self.datatype, "format": self.format or self.datatype}
         if self.items_type:
-            _schema["items"] = {"type": self.items_type, "format": self.format}
+            _schema["items"] = {"type": self.items_type}
         for x in ["enum", "min", "max", "default", "example"]:
             if value := getattr(self, x):
                 _schema[x] = value
@@ -142,7 +152,6 @@ class Parameter:
 
 
 class Response:
-
     def __init__(self, code=None, description=None, content=None):
         self.code = code
         self.description = description
@@ -166,7 +175,6 @@ class Response:
 
 
 class Operation:
-
     def __init__(
         self,
         operation=None,
@@ -179,6 +187,7 @@ class Operation:
         callbacks=None,
         return_type=None,
         accepts=None,
+        **kwargs,
     ):
         self.operation = operation
         self.summary = summary
@@ -208,11 +217,7 @@ class Operation:
         accepts = CONTENT_MAP.get(self.accepts)
         return {
             "description": self.description,
-            "content": {
-                accepts: {
-                    "schema": [x.dict() for x in self.parameters if x.in_request_body()]
-                }
-            },
+            "content": {accepts: {"schema": [x.dict() for x in self.parameters if x.in_request_body()]}},
         }
 
     def request_body(self):
@@ -228,9 +233,7 @@ class Operation:
                 "summary": self.summary,
                 "description": self.description,
                 "operationId": self.operation_id,
-                "parameters": [
-                    x.dict() for x in self.parameters if not x.in_request_body()
-                ],
+                "parameters": [x.dict() for x in self.parameters if not x.in_request_body()],
                 "responses": {x.code: x.dict() for x in self.responses},
                 "requestBody": self.request_body(),
             }
@@ -238,16 +241,12 @@ class Operation:
 
 
 class ResourceSchema:
-
     def __init__(self, resource, parser=None):
         self.resource = resource
         self.routes = resource.__routes__
         self.name = resource.__class__.__name__.capitalize()
         self.tags = getattr(resource, "__tags__", [self.name.lower()])
-        self.security = {
-            verb.lower(): auth
-            for verb, auth in getattr(resource, "__auth__", {}).items()
-        }
+        self.security = {verb.lower(): auth for verb, auth in getattr(resource, "__auth__", {}).items()}
         self.parser = parser() if parser else None
         self.paths = {}
 
@@ -274,23 +273,21 @@ class ResourceSchema:
     def process_routes(self):
         for route, values in self.routes.items():
             operations = values.get("operations")
-            suffix = values.get("suffix")
-            self.process_route(route, operations=operations, suffix=suffix)
+            self.process_route(route, operations=operations)
 
-    def process_route(self, route, operations=None, suffix=None):
+    def process_route(self, route, operations=None):
         operations = operations or verbs
         self.paths[route] = {}
+        paths = self.resource.__data__[route]
 
-        for k, v in self.resource.__data__.items():
+        # for each resource path add the path to openapi
+        for _, v in paths.items():
             data = self.process_parameters(v)
             operation = Operation(tags=self.tags, **data)
             self.paths[route].update(operation.dict())
 
-        return
-
 
 class Info:
-
     def __init__(
         self,
         title=None,
@@ -310,14 +307,13 @@ class Info:
         self.version = version
 
     def __repr__(self):
-        return self.__dict__
+        return str(self.__dict__)
 
     def dict(self):
         return self.__dict__
 
 
 class License:
-
     def __init__(self, name=None, url=None):
         self.name = name or ""
         self.url = url or ""
@@ -335,14 +331,13 @@ class Contact:
         self.email = email
 
     def __repr__(self):
-        return self.__dict__
+        return str(self.__dict__)
 
     def dict(self):
         return self.__dict__
 
 
 class OpenApi:
-
     def __init__(
         self,
         title=None,

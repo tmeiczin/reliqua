@@ -1,4 +1,11 @@
+"""
+Reliqua Framework.
+
+Copyright 2016-2024.
+"""
+
 import configparser
+
 from gunicorn.app.base import BaseApplication
 
 from .api import Api
@@ -6,6 +13,12 @@ from .middleware import ProcessParams
 
 
 def load_config(config_file):
+    """
+    Load configuration file.
+
+    :param str config_file:    Configuration file
+    :return dict:              Options dictionary
+    """
     params = {}
 
     try:
@@ -22,9 +35,7 @@ def load_config(config_file):
 
 
 class Application(BaseApplication):
-    """
-    Create a standalone restful application
-    """
+    """Create a standalone API application."""
 
     def __init__(
         self,
@@ -39,7 +50,7 @@ class Application(BaseApplication):
         title=None,
     ):
         """
-        Application init method
+        Create Application instance.
 
         :param str  bind:             Address and port to listen for requests [host:port]
         :param str  proxy_api_url:    Proxy URL for API used by Swagger UI (if different from bind)
@@ -64,7 +75,7 @@ class Application(BaseApplication):
         }
 
         proxy_api_url = proxy_api_url or options["proxy_api_url"]
-        resource_path = (resource_path or options["resource_path"],)
+        resource_path = resource_path or options["resource_path"]
 
         self.gunicorn_options = {
             "bind": bind or options["bind"],
@@ -75,10 +86,7 @@ class Application(BaseApplication):
         middleware.append(ProcessParams())
 
         # trim slashes from proxy URL if specified; otherwise set default proxy url
-        proxy_api_url = (
-            proxy_api_url.rstrip("/") if proxy_api_url else "http://%s" % (bind)
-        )
-
+        proxy_api_url = proxy_api_url.rstrip("/") if proxy_api_url else f"http://{bind}"
         self.application = Api(
             url=proxy_api_url,
             resource_path=resource_path,
@@ -88,10 +96,12 @@ class Application(BaseApplication):
             title=title,
         )
 
-        super(Application, self).__init__()
+        super().__init__()
 
     def load_config(self):
         """
+        Load configuration.
+
         Default config loader. This load settings from a config file
         with a 'config' section. This method should be overloaded
         if a custom loader is required.
@@ -100,4 +110,9 @@ class Application(BaseApplication):
             self.cfg.set(key.lower(), value)
 
     def load(self):
+        """
+        Load the application.
+
+        Base class.
+        """
         return self.application

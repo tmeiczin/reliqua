@@ -1,45 +1,56 @@
+"""
+Reliqua Framework.
+
+Copyright 2016-2024.
+"""
+
 import json
-import falcon
 import re
+
+import falcon
+
+TRANSFORMS = {
+    "string": str,
+    "str": str,
+    "number": float,
+    "float": float,
+    "integer": int,
+    "int": int,
+    "boolean": bool,
+    "bool": bool,
+    "object": json.loads,
+    "list": json.loads,
+    "array": json.loads,
+}
 
 
 class Parameter:
+    """
+    Parameter class.
+
+    This class represents a python typed parameter.
+    """
 
     def __init__(self, **kwargs):
+        """
+        Create a parameter instance.
+
+        Creates a parameter object and set attributes.
+        """
         self.default = None
         self.required = False
         self.__dict__.update(kwargs)
 
 
-def get_params_from_openapi(request, resource):
-    """Get the resources parameters from the openapi docstring."""
-    try:
-        endpoint = request.uri_template
-        method = request.method.lower()
-        route = resource.__routes__.get(endpoint)
-        if suffix := route.get("suffix"):
-            method = f"on_{method}_{suffix}"
-        params = resource.__data__[method]["parameters"]
-    except (TypeError, AttributeError, KeyError) as exc:
-        params = []
-
-    return [Parameter(**x) for x in params]
-
-
 class Converter:
+    """
+    Converter class.
 
-    transforms = {
-        "string": str,
-        "number": float,
-        "integer": int,
-        "boolean": bool,
-        "object": json.loads,
-        "list": json.loads,
-        "array": json.loads,
-    }
+    This class contains various str to Python type conversions.
+    """
 
     @staticmethod
-    def as_string(req, name, default=None, required=False, **kwargs):
+    def as_str(req, name, default=None, required=False, **_kwargs):
         """
         Get the parameter as a string.
 
@@ -52,7 +63,7 @@ class Converter:
         return req.get_param(name, default=default, required=required)
 
     @staticmethod
-    def as_number(req, name, default=None, required=False):
+    def as_float(req, name, default=None, required=False, **_kwargs):
         """
         Get the parameter as a float.
 
@@ -66,7 +77,7 @@ class Converter:
         return req.get_param_as_float(name, default=default, required=required)
 
     @staticmethod
-    def as_integer(req, name, default=None, required=False):
+    def as_int(req, name, default=None, required=False, **_kwargs):
         """
         Get the parameter as an integer.
 
@@ -80,7 +91,7 @@ class Converter:
         return req.get_param_as_int(name, default=default, required=required)
 
     @staticmethod
-    def as_boolean(req, name, default=None, required=False):
+    def as_bool(req, name, default=None, required=False, **_kwargs):
         """
         Get the parameter as a boolean.
 
@@ -90,10 +101,10 @@ class Converter:
         :param bool required:   ``True`` if the parameter is required else ``False``
         :return bool:           Converted parameter value
         """
-        return req.get_param_as_int(name, default=default, required=required)
+        return req.get_param_as_bool(name, default=default, required=required)
 
     @staticmethod
-    def as_object(req, name, default=None, required=False):
+    def as_object(req, name, default=None, required=False, **_kwargs):
         """
         Get the parameter as an object.
 
@@ -106,7 +117,7 @@ class Converter:
         return req.get_param_as_json(name, default=default, required=required)
 
     @staticmethod
-    def as_list(req, name, default=None, required=False, transform=None):
+    def as_list(req, name, default=None, required=False, transform=None, **_kwargs):
         """
         Get the parameter as a list.
 
@@ -123,14 +134,16 @@ class Converter:
         if isinstance(req.params[name], str) and req.params[name]:
             req.params[name] = [x.strip() for x in req.params[name].split(",")]
 
-        items = req.get_param_as_list(
-            name, default=default, required=required, transform=transform
-        )
+        # convert to list, if needed
+        if not isinstance(req.params[name], list):
+            req.params[name] = list(req.params[name])
+
+        items = req.get_param_as_list(name, default=default, required=required, transform=transform)
 
         return [item for item in items if item != ""]
 
     @staticmethod
-    def as_array(req, name, default=None, required=False, transform=None):
+    def as_array(req, name, default=None, required=False, transform=None, **_kwargs):
         """
         Get the parameter as a list.
 
@@ -141,13 +154,20 @@ class Converter:
         :param transform:       Function to transform the list items
         :return:                Converted parameter value
         """
-        Converter.as_list(name, default=default, required=required, transform=transform)
+        Converter.as_list(req, name, default=default, required=required, transform=transform)
 
     @staticmethod
-    # def convert(req, name, datatype, default=None, required=False, transform=None):
     def convert(req, parameter, transform=None):
-        converter = getattr(Converter, f"as_{parameter.datatype}", Converter.as_string)
-        # transform = transform or Converter.transforms.get(parameter.datatype, str)
+        """
+        Convert parameter types to Python types.
+
+        :param Request req:          Request object
+        :param Parameter parameter:  Parameter object
+        :param str transform:        Transform method name
+        :return:                     None
+        """
+        converter = getattr(Converter, f"as_{parameter.datatype}", Converter.as_str)
+        transform = TRANSFORMS.get(transform, str)
         default = transform(parameter.default) if transform and parameter.default else None
 
         return converter(
@@ -160,13 +180,20 @@ class Converter:
 
 
 class ProcessParams:
-    """
-    This middleware will process parameters and convert them to python types.
-
-    This middleware is used by default in all unrest applications.
-    """
+    """This middleware will process parameters and convert them to python types."""
 
     def _check_required(self, request, parameter):
+        """
+        Check if specified parameter is required.
+
+        If the specified parameter is required and not present,
+        raise the appropriate HTTP error.
+
+        :param Request request:         Request object:
+        :param Parameter parameter:     Parameter object
+        :return:                        None
+        :raises falcon.HTTPBadRequest:  Falcon bad request exception
+        """
         value = parameter.default or request.params.get(parameter.name)
         if parameter.required and not value:
             raise falcon.HTTPBadRequest(
@@ -189,11 +216,33 @@ class ProcessParams:
 
         return operators
 
+    @staticmethod
+    def get_resource_parameters(request, resource):
+        """
+        Return resource parameters.
+
+        Return the resource parameter data dictionary.
+
+        :param Request request:            Request object
+        :param Response response:          Response object
+        :return list[dict]                 Return list of parameter dictionaries
+        """
+        try:
+            endpoint = request.uri_template
+            method = request.method.lower()
+            params = resource.__data__[endpoint][method]["parameters"]
+        except (TypeError, AttributeError, KeyError):
+            params = []
+
+        return [Parameter(**x) for x in params]
+
     def process(self, request, parameters):
         """
-        Process parameters and convert to python types.
+        Process parameters.
 
-        :param request:                     Request object
+        Process, validate, and type convert to python types.
+
+        :param Request request:             Request object
         :param list[Parameter] parameters:  List of parameters from the schema
         :return:                            None
         """
@@ -230,16 +279,19 @@ class ProcessParams:
                 transform=transform,
             )
 
-    def process_resource(self, request, response, resource, params):
+    def process_resource(self, request, _response, resource, params):
         """
         Process resource.
 
-        :param Request request:    Request object
-        :param Response response:  Response object
-        :param Resource resource:  Resource object
-        :param list params:        Resource parameters
+        Process  the parameters for the request resource.
+
+        :param Request request:     Request object
+        :param Response _response:  Response object
+        :param Resource resource:   Resource object
+        :param list params:         Resource parameters
+        :return:                    None
         """
-        schema = get_params_from_openapi(request, resource)
+        schema = self.get_resource_parameters(request, resource)
 
         # combine parameters from query, path, and body
         for media_params in [params, request.get_media(default_when_empty=None)]:
@@ -251,26 +303,4 @@ class ProcessParams:
             return
 
         # process, validate, convert, etc
-        self.process(request, schema)
-
-    async def process_resource_async(self, request, response, resource, params):
-        """
-        Process resource asynchronously.
-
-        :param Request request:    Request object
-        :param Response response:  Response object
-        :param Resource resource:  Resource object
-        :param list params:        Resource parameters
-        """
-        schema = get_params_from_openapi(request, resource)
-
-        # combine parameters from query, path, and body
-        for media_params in [params, await request.get_media(default_when_empty=None)]:
-            if isinstance(media_params, dict):
-                request.params.update(media_params)
-
-        # no openapi, just params and leave
-        if not schema:
-            return
-
         self.process(request, schema)

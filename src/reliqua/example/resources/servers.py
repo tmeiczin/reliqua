@@ -1,0 +1,84 @@
+from reliqua.resources.base import Resource
+from reliqua.status_codes import HTTP
+
+servers = [
+    "romeo",
+    "juliet",
+]
+
+
+class Server(Resource):
+
+    __routes__ = {
+        "/servers/{id}": {"suffix": "by_id"},
+    }
+
+    __tags__ = [
+        "servers",
+    ]
+
+    def on_get_by_id(self, req, resp, id=None):
+        """
+        Retrieve servers.
+
+        Retrieve a list of servers in the lab.
+
+        :param str id:       [in_path, required] Server ID
+
+        :response 200:       server was retrieved
+        :response 400:       invalid query paremeter
+
+        :return json:
+        """
+        try:
+            resp.media = servers[id]
+        except IndexError:
+            resp.status = HTTP("404")
+
+
+class Servers(Resource):
+
+    __routes__ = {"/servers": {}, "/servers/cpu/{cpu}": {"suffix": "by_cpu"}}
+
+    __tags__ = [
+        "servers",
+    ]
+
+    def on_get(self, req, resp):
+        """
+        Retrieve a server.
+
+        Retrieve server information
+
+        :param int cpus:     [in_query, required] Number of CPUs for server
+
+        :response 200:       server  was retrieved
+        :response 400:       invalid query paremeter
+
+        :return json:
+        """
+        index = req.params.get("cpus")
+        try:
+            resp.media = servers[index]
+        except IndexError:
+            resp.status = HTTP("404")
+        except TypeError:
+            resp.media = servers
+
+    def on_get_by_cpu(self, req, resp, cpu=1):
+        """
+        Retrieve a server by cpu.
+
+        Retrieve server information by cpu
+
+        :param int cpus:     [in_path, required] Number of CPUs for server
+
+        :response 200:       server  was retrieved
+        :response 400:       invalid query paremeter
+
+        :return json:
+        """
+        try:
+            resp.media = servers[int(id)]
+        except IndexError:
+            resp.status = HTTP("404")

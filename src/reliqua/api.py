@@ -1,23 +1,30 @@
-import falcon
+"""
+Reliqua Framework.
+
+Copyright 2016-2024.
+"""
+
 import glob
 import imp
 import inspect
 import os
+import re
 import sys
 import uuid
 
+import falcon
 from falcon_cors import CORS
 
 from .docs import Docs
-from .openapi import OpenApi
-from .sphinx_parser import SphinxParser
-from .resources.base import Resource
-from .swagger import Swagger
 from .media_handlers import JSONHandler, TextHandler, YAMLHandler
+from .openapi import OpenApi
+from .resources.base import Resource
+from .sphinx_parser import SphinxParser
+from .swagger import Swagger
 
 
 class Api(falcon.App):
-    """add auto route and documentation"""
+    """Add auto route and documentation."""
 
     def __init__(
         self,
@@ -29,7 +36,7 @@ class Api(falcon.App):
         title=None,
     ):
         """
-        Create an API instance
+        Create an API instance.
 
         :param obj  cfg:           Gunicorn config
         :param str  url:           URL used by Swagger UI
@@ -54,15 +61,13 @@ class Api(falcon.App):
         self.doc_path = path + "/swagger"
 
         middleware = middleware or []
-        cors = CORS(
-            allow_all_origins=True, allow_all_methods=True, allow_all_headers=True
-        )
+        cors = CORS(allow_all_origins=True, allow_all_methods=True, allow_all_headers=True)
         middleware.append(cors.middleware)
 
-        super(Api, self).__init__(middleware=middleware)
+        super().__init__(middleware=middleware)
 
         if not resource_path:
-            resource_path = self.path + "/resources"
+            resource_path = path + "/resources"
 
         self.req_options.auto_parse_form_urlencoded = True
         self.resource_path = resource_path
@@ -87,7 +92,6 @@ class Api(falcon.App):
     def _load_resources(self):
         resources = []
         path = f"{self.resource_path}/*.py"
-        path = "%s/*.py" % (self.resource_path)
         print(f"searching {path}")
         files = glob.glob(path)
 
@@ -98,25 +102,41 @@ class Api(falcon.App):
 
         self.resources = [x() for x in resources]
 
-    def _parse_docstrings(self):
+    def _is_route_method(self, name, suffix):
+        if not name.startswith("on_"):
+            return None
+
+        if suffix:
+            return name.endswith(suffix)
+
+        return re.search(r"^on_([a-z]+)$", name)
+
+    def _parse_methods(self, resource, route, methods):
         parser = SphinxParser()
+        for name in methods:
+            operation_id = f"{resource.__class__.__name__}.{name}"
+            action = re.search(r"on_(delete|get|patch|post|put)", name).group(1)
+            method = getattr(resource, name)
+            resource.__data__[route][action] = parser.parse(method, operation_id=operation_id)
+
+    def _parse_resource(self, resource):
+        for route, data in resource.__routes__.items():
+            resource.__data__[route] = {}
+            suffix = data.get("suffix", None)
+            methods = [x for x in dir(resource) if self._is_route_method(x, suffix)]
+            self._parse_methods(resource, route, methods)
+
+    def _parse_docstrings(self):
         for resource in self.resources:
             resource.__data__ = {}
-            methods = [x for x in dir(resource) if x.startswith("on_")]
-            for name in methods:
-                operation_id = f"{resource.__class__.__name__}.{name}"
-                action = name.replace("on_", "")
-                method = getattr(resource, name)
-                resource.__data__[action] = parser.parse(
-                    method, operation_id=operation_id
-                )
+            self._parse_resource(resource)
 
     def _get_classes(self, filename):
         classes = []
         module_name = str(uuid.uuid3(uuid.NAMESPACE_OID, filename))
         module = imp.load_source(module_name, filename)
 
-        for n, c in inspect.getmembers(module, inspect.isclass):
+        for _, c in inspect.getmembers(module, inspect.isclass):
             if issubclass(c, Resource) and hasattr(c, "__routes__"):
                 classes.append(c)
 
@@ -124,9 +144,8 @@ class Api(falcon.App):
 
     def _add_routes(self):
         for resource in self.resources:
-            routes = getattr(resource, "__routes__")
+            routes = resource.__routes__
             for route, kwargs in routes.items():
-                print(f"adding route {route} {kwargs}")
                 self.add_route(route, resource, **kwargs)
 
     def _add_docs(self):

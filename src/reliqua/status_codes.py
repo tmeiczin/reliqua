@@ -1,12 +1,16 @@
-""" HTTP STATUS CODES """
+"""
+Reliqua Framework.
+
+Copyright 2016-2024.
+"""
 
 
 def http(code):
+    """Return HTTP as string."""
     try:
-        int(code)
-        return "%s %s" % (code, CODES[str(code)])
+        return f"{int(code)} {CODES[str(code)]}"
     except ValueError:
-        return "%s %s" % (MESSAGES[code.upper()], code)
+        return f"{MESSAGES[code.upper()]} {code}"
 
 
 HTTP = http
@@ -70,4 +74,4 @@ CODES = {
     "511": "Network Authentication Required",
 }
 
-MESSAGES = dict((v.upper().replace(" ", "_"), k) for k, v in CODES.items())
+MESSAGES = {(v.upper().replace(" ", "_"), k) for k, v in CODES.items()}

@@ -1,31 +1,28 @@
 from reliqua.resources.base import Resource
 from reliqua.status_codes import HTTP
 
-
 users = [
     {
-        'username': 'ted',
-        'email': 'ted@nowhere.com',
+        "username": "ted",
+        "email": "ted@nowhere.com",
     },
     {
-        'username': 'bob',
-        'email': 'bob@nowhere.com',
-    }
+        "username": "bob",
+        "email": "bob@nowhere.com",
+    },
 ]
 
-phones = ['603-555-1234', '603-555-5678']
+phones = ["603-555-1234", "603-555-5678"]
 
 
 class User(Resource):
 
     __routes__ = {
-        "/users/{id}": {
-            "suffix": "by_id"
-        },
+        "/users/{id}": {"suffix": "by_id"},
     }
 
     __tags__ = [
-       "users",
+        "users",
     ]
 
     phones = phones
@@ -35,8 +32,6 @@ class User(Resource):
         Retrieve a user.
 
         :param str id:       [in_path, required] User ID
-        :param str email:    [in_query] User Email
-        :param str|int phone:    [in_query, enum=phones] Phone Numbers
 
         :response 200:       user was retrieved
         :response 400:       invalid query paremeter
@@ -46,7 +41,7 @@ class User(Resource):
         try:
             resp.media = users[int(id)]
         except IndexError:
-            resp.status = HTTP('404')
+            resp.status = HTTP("404")
 
     def on_delete_by_id(self, req, resp, id=None):
         """
@@ -58,63 +53,47 @@ class User(Resource):
         """
         try:
             users.pop(int(id))
-            resp.media = {'success': True}
+            resp.media = {"success": True}
         except IndexError:
-            resp.status = HTTP('400')
+            resp.status = HTTP("400")
 
 
 class Users(Resource):
 
     __routes__ = {
-        '/users': {},
-        '/employees': {},
+        "/users": {},
     }
 
     __tags__ = [
-       "users",
+        "users",
     ]
 
     def on_get(self, req, resp):
         """
-        Retrieve a user
+        Retrieve users.
 
         :param str username:      [in_query]  Username
-        :param str email:         [in_query default=terrence.meiczinger@hpe.com]  Email
+        :param str email:         [in_query default=ted@invalid.com]  Email
+        :param list[int] ids:     [in_query] List of IDs
 
         :return json:
         """
         results = []
         p = req.params
-        print(p)
         if any(p.values()):
             for user in users:
-                if user['username'] == p.get('username', None):
+                if user["username"] == p.get("username", None):
                     results.append(user)
-                elif user['email'] == p.get('email', None):
+                elif user["email"] == p.get("email", None):
                     results.append(user)
         else:
             results = users
 
         resp.media = results
 
-    def on_delete(self, req, resp):
-        """
-        Delete a user.
-
-        :param str id:      [in_query, required] User Id
-
-        :return json:
-        """
-        p = req.params
-        try:
-            users.pop(int(p.get(id, None)))
-            resp.media = {'success': True}
-        except IndexError:
-            resp.status = HTTP('400')
-
     def on_post(self, req, resp):
         """
-        Create a new user
+        Create a new user.
 
         :param str username:      [in_body, required]  Username
         :param str email:         [in_body, required]  Email
