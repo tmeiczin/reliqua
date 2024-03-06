@@ -17,9 +17,6 @@ PARAM_ITER_REGEX = re.compile(
 RESPONSE_ITER_REGEX = re.compile(r":response\s+(?P<code>\d+)\s*(?P<content>\w+)?:\s+(?P<description>\w+)")
 RETURN_REGEX = re.compile(r"return\s+(\w+):|:return:\s+(\w+)")
 ACCEPT_REGEX = re.compile(r"accepts\s+(\w+):|:accepts:\s+(\w+)")
-OPTION_REGEX = {
-    "location": r"in_(?P<location>\w+)",
-}
 KEYVALUE_REGEX = re.compile(r"(?P<key>\w+)=(?P<value>\w+)")
 OPERATION_REGEX = re.compile(r"on_(delete|get|patch|post|put)")
 SUFFIX_REGEX = re.compile(r"on_(?:delete|get|patch|post|put)_([a-zA-Z0-9_]+)")
@@ -38,23 +35,24 @@ class SphinxParser:
 
     @staticmethod
     def parse_options(string):
+
         options = {
-            "location": "in_query",
+            "location": "query",
             "enum": [],
             "required": False,
+            "default": None,
             "min": None,
             "max": None,
         }
-
-        for option, regex in OPTION_REGEX.items():
-            if match := re.search(regex, string):
-                options[option] = match.group(1)
 
         for match in KEYVALUE_REGEX.finditer(string):
             items = match.groupdict()
             options[items["key"]] = items["value"]
 
+        # rename in to location
+        options["location"] = options.pop("in")
         options["required"] = True if "required" in string and "optional" not in string else False
+        print(options)
 
         return options
 
