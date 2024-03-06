@@ -1,0 +1,41 @@
+{
+  "folders": [
+    {
+      "name": "reliqua",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "autoDocstring.docstringFormat": "one-line-sphinx",
+    "autoDocstring.startOnNewLine": true,
+    "autoDocstring.includeExtendedSummary": true,
+    "[python]": {
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+      },
+      "ruff.showNotifications": "always",
+      "editor.defaultFormatter": "charliermarsh.ruff",
+      "editor.formatOnSave": true
+    },
+    "cSpell.diagnosticLevel": "Information",
+    "cSpell.customDictionaries": {
+      "custom-dictionary-workspace": {
+        "name": "reliqua",
+        "path": "${workspaceFolder:reliqu}/.cspell/dictionary.txt",
+        "addWords": true,
+        "scope": "workspace"
+      }
+    },
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.black-formatter",
+      "ms-python.isort",
+      "ms-python.pylint",
+      "streetsidesoftware.code-spell-checker",
+      "njpwerner.autodocstring",
+      "charliermarsh.ruff"
+    ]
+  }
+}

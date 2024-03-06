@@ -1,0 +1,179 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools",
+    "wheel"
+]
+
+[project]
+name = "reliqua"
+version = "0.0.1"
+description = "Simple, efficient, intuitive API Framework"
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["utilities"]
+license = { text = "MIT" }
+authors = [
+    {name = "Terrence Meiczinger", email = "terrence72@gmail.com"}
+]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: Unix",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Framework :: Reliqua",
+    "License :: OSI Approved :: MIT License",
+]
+dependencies = [
+    "falcon>=3.0.0",
+    "falcon-cors",
+    "gunicorn>=19.6.0",
+]
+
+[project.urls]
+homepage = "https://github.com/tmeiczin/reliqua"
+documentation = "https://github.com/tmeiczin/reliqua"
+repository = "https://github.com/tmeiczin/reliqua"
+
+[project.optional-dependencies]
+dev = [
+    "tox",
+    "requests",
+    "bump2version"
+]
+
+[project.scripts]
+reliqua-example = "reliqua.example.__main__:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 120
+target-version = ["py310"]
+include = '\.pyi?$'
+
+[tool.pydocstyle]
+convention = "pep257"
+add-ignore = "D412"
+# D412: No blank lines allowed between a section header and its content
+#       [required by Sphinx for ".. code:: <lang>" blocks]
+
+[tool.pylint."messages control"]
+disable = [
+    "too-many-instance-attributes",
+    "too-many-arguments",
+    "too-few-public-methods",
+    "too-many-locals",
+    "too-many-public-methods",
+    "consider-using-with",
+    "too-many-lines",
+    "too-many-branches",
+    "duplicate-code",
+    "raw-checker-failed",
+    "bad-inline-option",
+    "locally-disabled",
+    "file-ignored",
+    "suppressed-message",
+    "useless-suppression",
+    "deprecated-pragma",
+    "use-symbolic-message-instead",
+    "fixme",
+]
+max-line-length = 120
+
+[tool.pylint.BASIC]
+good-names = "i, j, k, v, r, x, y, db, fh, id, ip, st, mt, ex, Run, _"
+allowed-redefined-builtins = "id,"
+
+[tool.pylint.MAIN]
+extension-pkg-allow-list = "falcon,tesserocr"
+
+[tool.pylint.FORMAT]
+ignore-long-lines = "^.*https?://.*$"
+
+[tool.isort]
+multi_line_output = 3
+py_version = 310
+include_trailing_comma = true
+
+[tool.ruff]
+target-version = "py38"
+line-length = 120
+output-format = "full"
+exclude = [".git", ".venv", ".tox", ".dist", "doc", "*egg,build", "*.pyc"]
+
+[tool.ruff.lint]
+select = [
+  "ALL",
+]
+ignore = [
+  "A",        # flake8-builtins
+  "ANN",      # flake8-annotations
+  "ARG",      # flake8-unused-arguments
+  "ASYNC101", # open-sleep-or-subprocess-in-async-function
+  "B904",     # flake8-bugbear raise-without-from-inside-except
+  "BLE",      # flake8-blind-except blind-except
+  "EM",       # flake8-errmsg
+  "ERA",      # eradicate commented-out-code
+  "FIX002",   # flake8-fixme line-contains-todo
+  "FIX003",   # flake8-fixme line-contains-xxx
+  "FBT",      # flake8-boolean-trap
+  "G",        # flake8-logging-format
+  "PIE",      # flake8-pie
+  "C901",     # too-complex
+  "COM812",   # trailing-comma
+  "UP015",    # pyupgrade redundant-open-modes
+  "E501",     # line length
+  "D412",     # pydocstyle blank-lines-between-header-and-content
+  "N818",     # pep8-naming error-suffix-on-exception-name
+  "G010",     # false positive warning (check is confused between our logger and python logging)
+  "PLR0912",  # pylint too-many-branches
+  "PLR0913",  # pylint too-many-arguments
+  "PLR2004",  # pylint magic-value-comparison
+  "PLC1901",  # pylint compare-to-empty-string
+  "PLW2901",  # pylint redefined-loop-name
+  "PTH",      # flake8-use-pathlib
+  "RUF012",   # ruff mutable-class-default
+  "S105",     # flake8-bandit hardcoded-password-string
+  "S107",     # flake8-bandit hardcoded-password-default
+  "S108",     # flake8-bandit hardcoded-temp-file
+  "S304",     # flake8-bandit suspicious-insecure-cipher-usage
+  "S311",     # flake8-bandit suspicious-non-cryptographic-random-usage
+  "S312",     # flake8-bandit suspicious-telnet-usage
+  "S501",     # request-with-no-cert-validation
+  "S602",     # flake8-bandit subprocess-popen-with-shell-equals-true
+  "S603",     # flake8-bandit subprocess-without-shell-equals-true
+  "SLOT000",  # subclasses of `str` should define `__slots__`
+  "SIM",      # flake8-simplify
+  "SLF",      # flake8-self
+  "T201",     # flake8-print print
+  "TD003",    # flake8-todos missing-todo-link
+  "TRY003",   # tryceratops
+  "TRY400",   # tryceratops
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.coverage.paths]
+source = ['src', '*/site-packages']
+
+[tool.coverage.run]
+source = ['reliqua']
+branch = true
+parallel = true
+
+[tool.coverage.report]
+show_missing = true
+precision = 2
