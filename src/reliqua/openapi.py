@@ -67,7 +67,7 @@ class Parameter:
         example=None,
     ):
         self.name = name
-        self.location = location
+        self.location = location or "query"
         self.required = required
         self.default = default
         self.enum = enum
@@ -199,6 +199,7 @@ class Operation:
         self.responses = [Response(**x) for x in responses or []]
         self.return_type = return_type
         self.accepts = accepts or "*/*"
+        self.body = [x.dict() for x in self.parameters if x.in_request_body()]
 
     def binary_body(self):
         accepts = CONTENT_MAP.get(self.accepts)
@@ -217,7 +218,7 @@ class Operation:
         accepts = CONTENT_MAP.get(self.accepts)
         return {
             "description": self.description,
-            "content": {accepts: {"schema": [x.dict() for x in self.parameters if x.in_request_body()]}},
+            "content": {accepts: {"schema": self.body}},
         }
 
     def request_body(self):
@@ -227,17 +228,18 @@ class Operation:
         return self.json_body()
 
     def dict(self):
-        return {
-            self.operation: {
-                "tags": self.tags,
-                "summary": self.summary,
-                "description": self.description,
-                "operationId": self.operation_id,
-                "parameters": [x.dict() for x in self.parameters if not x.in_request_body()],
-                "responses": {x.code: x.dict() for x in self.responses},
-                "requestBody": self.request_body(),
-            }
+        operation = {
+            "tags": self.tags,
+            "summary": self.summary,
+            "description": self.description,
+            "operationId": self.operation_id,
+            "parameters": [x.dict() for x in self.parameters if not x.in_request_body()],
+            "responses": {x.code: x.dict() for x in self.responses},
         }
+        if self.body:
+            operation["requestBody"] = self.request_body()
+
+        return {self.operation: operation}
 
 
 class ResourceSchema:

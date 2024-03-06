@@ -39,7 +39,7 @@ class SphinxParser:
     @staticmethod
     def parse_options(string):
         options = {
-            "location": None,
+            "location": "in_query",
             "enum": [],
             "required": False,
             "min": None,

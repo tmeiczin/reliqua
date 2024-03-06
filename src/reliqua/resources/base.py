@@ -4,11 +4,14 @@ Reliqua framework.
 Copyright 2016-2024.
 """
 
-import inspect
-import re
-
 
 class Resource:
+    """
+    Base resource class.
+
+    All resource should be a subclass of Resource. This is how
+    the application finds and adds routes.
+    """
 
     def get_params(self, req, keys=None, exclude=None):
         """

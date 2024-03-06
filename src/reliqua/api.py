@@ -29,8 +29,10 @@ class Api(falcon.App):
     def __init__(
         self,
         url=None,
+        swagger_url=None,
         resource_path=None,
         middleware=None,
+        config=None,
         version=None,
         desc=None,
         title=None,
@@ -38,27 +40,32 @@ class Api(falcon.App):
         """
         Create an API instance.
 
-        :param obj  cfg:           Gunicorn config
-        :param str  url:           URL used by Swagger UI
-        :param str  resource_path: Path to the resource modules
+        :param str url:            API URL used by Swagger UI
+        :param str swagger_url:    URL to Swagger instance
+        :param str resource_path:  Path to the resource modules
         :param list middleware:    Middleware
-        :param str  version:       Application version
-        :param str  desc:          Application description
-        :param str  title:         Application title
+        :param str version:        Application version
+        :param str desc:           Application description
+        :param str title:          Application title
+        :param dict config:        API configuration parameters
 
         :return:                   api instance
         """
         self.doc_endpoint = "/docs"
-        self.swagger_file = "swagger.json"
-        self.url = url
-        self.doc_url = url + self.doc_endpoint
+        self.openapi_spec = "/openapi/openapi.json"
+        self.openapi_static = "/openapi/static"
         self.desc = desc
         self.title = title
         self.version = version
         self.resources = []
+        self.config = config or {}
 
         path = os.path.dirname(sys.modules[__name__].__file__)
-        self.doc_path = path + "/swagger"
+        self.url = url
+        self.swagger_path = f"{path}/swagger"
+        self.openapi_server = swagger_url
+        self.openapi_spec_url = f"{self.url}{self.openapi_spec}"
+        self.openapi_static_url = f"{self.url}{self.openapi_static}"
 
         middleware = middleware or []
         cors = CORS(allow_all_origins=True, allow_all_methods=True, allow_all_headers=True)
@@ -149,7 +156,7 @@ class Api(falcon.App):
                 self.add_route(route, resource, **kwargs)
 
     def _add_docs(self):
-        swagger = Swagger(self.doc_url, self.swagger_file, self.doc_path)
+        swagger = Swagger(self.openapi_static_url, self.openapi_spec_url)
         openapi = OpenApi(
             title=self.title,
             description=self.desc,
@@ -160,7 +167,8 @@ class Api(falcon.App):
         )
         openapi.process_resources(self.resources)
         schema = openapi.schema()
-        print(f"adding docs {self.doc_endpoint} {self.doc_path}")
-        self.add_static_route(self.doc_endpoint, self.doc_path)
+        print(f"adding static route {self.doc_endpoint} {self.swagger_path}")
+        self.add_static_route(self.openapi_static, self.swagger_path)
         self.add_route(self.doc_endpoint, swagger)
-        self.add_route(self.doc_endpoint + "/" + self.swagger_file, Docs(schema))
+        print(f"adding swagger file {self.openapi_spec}")
+        self.add_route(self.openapi_spec, Docs(schema))
