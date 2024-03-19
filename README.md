@@ -21,9 +21,9 @@ class User(Resource):
         Retrieve a user. This value
         is awesome
 
-        :param str id:       [in_path, required] User ID
-        :param str email:    [in_query] User Email
-        :param str phone:    [in_query, enum] Phone Numbers
+        :param str id:       [in=path, required] User ID
+        :param str email:    [in=query] User Email
+        :param str phone:    [in=query, enum] Phone Numbers
 
         :response 200:
         :response 400:
