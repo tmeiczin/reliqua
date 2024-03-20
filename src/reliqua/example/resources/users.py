@@ -31,7 +31,7 @@ class User(Resource):
         """
         Retrieve a user.
 
-        :param str id:       [in_path, required] User ID
+        :param str id:       [in=path, required] User ID
 
         :response 200:       user was retrieved
         :response 400:       invalid query paremeter
@@ -47,7 +47,7 @@ class User(Resource):
         """
         Delete a user.
 
-        :param str id:      [in_path] User Id
+        :param str id:      [in=path] User Id
 
         :return json:
         """
@@ -72,9 +72,9 @@ class Users(Resource):
         """
         Retrieve users.
 
-        :param str username:      [in_query]  Username
-        :param str email:         [in_query default=ted@invalid.com]  Email
-        :param list[int] ids:     [in_query] List of IDs
+        :param str username:      [in=query]  Username
+        :param str email:         [in=query default=ted@invalid.com]  Email
+        :param list[int] ids:     [in=query] List of IDs
 
         :return json:
         """
@@ -95,8 +95,8 @@ class Users(Resource):
         """
         Create a new user.
 
-        :param str username:      [in_body, required]  Username
-        :param str email:         [in_body, required]  Email
+        :param str username:      [in=body, required]  Username
+        :param str email:         [in=body, required]  Email
 
         :return json:
         """

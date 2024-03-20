@@ -23,7 +23,7 @@ class Server(Resource):
 
         Retrieve a list of servers in the lab.
 
-        :param str id:       [in_path, required] Server ID
+        :param str id:       [in=path, required] Server ID
 
         :response 200:       server was retrieved
         :response 400:       invalid query paremeter
@@ -50,7 +50,7 @@ class Servers(Resource):
 
         Retrieve server information
 
-        :param int cpus:     [in_query, required] Number of CPUs for server
+        :param int cpus:     [in=query, required] Number of CPUs for server
 
         :response 200:       server  was retrieved
         :response 400:       invalid query paremeter
@@ -71,7 +71,7 @@ class Servers(Resource):
 
         Retrieve server information by cpu
 
-        :param int cpus:     [in_path, required] Number of CPUs for server
+        :param int cpus:     [in=path, required] Number of CPUs for server
 
         :response 200:       server  was retrieved
         :response 400:       invalid query paremeter
