@@ -1,3 +1,9 @@
+"""
+Reliqua Framework.
+
+Copyright 2016-2024.
+"""
+
 from reliqua.resources.base import Resource
 from reliqua.status_codes import HTTP
 
@@ -14,8 +20,21 @@ users = [
 
 phones = ["603-555-1234", "603-555-5678"]
 
+USER = {
+    "type": "object",
+    "properties": {
+        "username": {
+            "type": "string",
+            "examples": ["billybob"],
+        }
+    },
+}
+
+USERS = {"type": "array", "items": {"$ref": "#/components/schemas/user"}}
+
 
 class User(Resource):
+    """User resource."""
 
     __routes__ = {
         "/users/{id}": {"suffix": "by_id"},
@@ -25,16 +44,16 @@ class User(Resource):
         "users",
     ]
 
+    user = USER
     phones = phones
 
     def on_get_by_id(self, req, resp, id=None):
         """
-        Retrieve a user.
+        Return a user.
 
         :param str id:       [in=path, required] User ID
-
-        :response 200:       user was retrieved
-        :response 400:       invalid query paremeter
+        :response 200 user:  User was retrieved
+        :response 400:       Invalid query paremeter
 
         :return json:
         """
@@ -59,6 +78,7 @@ class User(Resource):
 
 
 class Users(Resource):
+    """Users resource."""
 
     __routes__ = {
         "/users": {},
@@ -68,13 +88,16 @@ class Users(Resource):
         "users",
     ]
 
+    users = USERS
+
     def on_get(self, req, resp):
         """
-        Retrieve users.
+        Return users.
 
         :param str username:      [in=query]  Username
         :param str email:         [in=query default=ted@invalid.com]  Email
         :param list[int] ids:     [in=query] List of IDs
+        :response 200 users:      Users were retrieved
 
         :return json:
         """

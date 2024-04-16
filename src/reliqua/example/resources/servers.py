@@ -1,3 +1,9 @@
+"""
+Reliqua Framework.
+
+Copyright 2016-2024.
+"""
+
 from reliqua.resources.base import Resource
 from reliqua.status_codes import HTTP
 
@@ -8,6 +14,7 @@ servers = [
 
 
 class Server(Resource):
+    """Server resource."""
 
     __routes__ = {
         "/servers/{id}": {"suffix": "by_id"},
@@ -37,8 +44,9 @@ class Server(Resource):
 
 
 class Servers(Resource):
+    """Servers resource."""
 
-    __routes__ = {"/servers": {}, "/servers/cpu/{cpu}": {"suffix": "by_cpu"}}
+    __routes__ = {"/servers": {}, "/servers/cpus/{cpus}": {"suffix": "by_cpu"}}
 
     __tags__ = [
         "servers",

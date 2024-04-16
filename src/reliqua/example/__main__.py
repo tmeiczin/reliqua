@@ -1,3 +1,9 @@
+"""
+Reliqua Framework.
+
+Copyright 2016-2024.
+"""
+
 import argparse
 import os
 import sys
@@ -6,6 +12,7 @@ from reliqua import Application, load_config
 
 
 def main():
+    """Execute main method."""
     bind_address = "127.0.0.01"
     bind_port = 8000
     api_url = None
@@ -33,7 +40,7 @@ def main():
                 setattr(args, k, v)
 
     app = Application(
-        bind="%s:%s" % (args.address, args.port),
+        bind=f"{args.address}:{args.port}",
         workers=args.workers,
         resource_path=args.resource_path,
         api_url=args.api_url,
@@ -45,4 +52,5 @@ def main():
 
 
 if __name__ == "__main__":
+    """Execte main function."""
     main()
