@@ -21,7 +21,7 @@
     "cSpell.customDictionaries": {
       "custom-dictionary-workspace": {
         "name": "reliqua",
-        "path": "${workspaceFolder:reliqu}/.cspell/dictionary.txt",
+        "path": "${workspaceFolder:reliqua}/.cspell/dictionary.txt",
         "addWords": true,
         "scope": "workspace"
       }

@@ -14,7 +14,7 @@ PARAM_ITER_REGEX = re.compile(
     r"^(:param.*?:.*?)(?:(?=:param)|(?=:return)|(?=:response)|(?=:accepts))",
     re.MULTILINE | re.DOTALL,
 )
-RESPONSE_ITER_REGEX = re.compile(r":response\s+(?P<code>\d+)\s*(?P<content>\w+)?:\s+(?P<description>\w+)")
+RESPONSE_ITER_REGEX = re.compile(r":response\s+(?P<code>\d+)\s*(?P<schema>\w+)?:\s+(?P<description>\w+)")
 RETURN_REGEX = re.compile(r"return\s+(\w+):|:return:\s+(\w+)")
 ACCEPT_REGEX = re.compile(r"accepts\s+(\w+):|:accepts:\s+(\w+)")
 KEYVALUE_REGEX = re.compile(r"(?P<key>\w+)=(?P<value>\w+)")
@@ -31,11 +31,23 @@ class SphinxParser:
     """
 
     def __init__(self):
+        """
+        Create SphinxParser instance.
+
+        Create a SphinxParser instance to parse resource doc strings.
+        """
         self.doc = ""
 
     @staticmethod
     def parse_options(string):
+        """
+        Parse options docstring.
 
+        Parse option information from the docstring.
+
+        :param str string:    Docstring
+        :return dict:         Options dict
+        """
         options = {
             "location": "query",
             "enum": [],
@@ -52,11 +64,18 @@ class SphinxParser:
         # rename in to location
         options["location"] = options.pop("in")
         options["required"] = True if "required" in string and "optional" not in string else False
-        print(options)
 
         return options
 
     def parse_parameter(self, string):
+        """
+        Parse parameter docstring.
+
+        Parse the parameter information from the docstring.
+
+        :param str string:     Docstring
+        :return dict:          Parameter dict
+        """
         match = PARAM_REGEX.search(string)
 
         if not match:
@@ -76,6 +95,7 @@ class SphinxParser:
 
     @property
     def summary(self):
+        """Return summary."""
         if match := re.search(r"(.*?)\n", self.doc, re.MULTILINE | re.DOTALL):
             return match.group(1).replace("\n", " ").strip()
 
@@ -83,6 +103,7 @@ class SphinxParser:
 
     @property
     def description(self):
+        """Return description."""
         if match := re.search(r"\n\n(.*?):", self.doc, re.MULTILINE | re.DOTALL):
             return match.group(1).replace("\n", " ").strip()
 
@@ -90,6 +111,7 @@ class SphinxParser:
 
     @property
     def parameters(self):
+        """Return parameters."""
         _parameters = []
 
         for item in PARAM_ITER_REGEX.finditer(self.doc):
@@ -102,23 +124,27 @@ class SphinxParser:
 
     @property
     def accepts(self):
+        """Return accepts type."""
         if match := ACCEPT_REGEX.search(self.doc):
             return match.group(1) or match.group(2)
 
+        return ""
+
     @property
     def responses(self):
+        """Return responses."""
         _responses = []
-        default_type = "json"
 
         for item in RESPONSE_ITER_REGEX.finditer(self.doc):
             response = item.groupdict()
-            response["content"] = response.get("content") or default_type
+            response["schema"] = response.get("schema", {})
             _responses.append(response)
 
         return _responses
 
     @property
     def content(self):
+        """Return content."""
         if match := RETURN_REGEX.search(self.doc):
             return match.group(1) or match.group(2)
 
@@ -126,10 +152,26 @@ class SphinxParser:
 
     @staticmethod
     def generate_operation_id(method):
+        """
+        Generate operation id.
+
+        Generate an operation id from the method name.
+
+        :param method method:    Python method
+        :return str:             Operation id
+        """
         return method.__qualname__
 
     @staticmethod
     def parse_operation(method):
+        """
+        Parse operation.
+
+        Parse the operation information from the docstring.
+
+        :param method method:    Python method
+        :return dict:            Dict of parameter options
+        """
         m = re.search(OPERATION_REGEX, method.__qualname__)
         if m:
             return m.group(1)
@@ -144,10 +186,15 @@ class SphinxParser:
 
         return None
 
-    def process_enum(self, resource, enum):
-        return getattr(resource, enum)
-
     def parse(self, method, operation=None, operation_id=None):
+        """
+        Parse the methods docstring.
+
+        :param method method:     Method with docstring
+        :param str operation:     Operation type (default is to parse from method name)
+        :param str operation_id:  Operation id (default is to parse from method name)
+        :return dict:             Return operation dictionary
+        """
         self.doc = inspect.cleandoc(method.__doc__)
         operation = operation or self.parse_operation(method)
         operation_id = operation_id or self.generate_operation_id(method)
