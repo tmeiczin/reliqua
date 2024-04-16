@@ -64,6 +64,7 @@ class SphinxParser:
         # rename in to location
         options["location"] = options.pop("in")
         options["required"] = True if "required" in string and "optional" not in string else False
+        print(options)
 
         return options
 
