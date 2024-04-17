@@ -5,7 +5,7 @@ Copyright 2016-2024.
 """
 
 import glob
-import imp
+import importlib
 import inspect
 import os
 import re
@@ -141,7 +141,9 @@ class Api(falcon.App):
     def _get_classes(self, filename):
         classes = []
         module_name = str(uuid.uuid3(uuid.NAMESPACE_OID, filename))
-        module = imp.load_source(module_name, filename)
+        spec = importlib.util.spec_from_file_location(module_name, filename)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
 
         for _, c in inspect.getmembers(module, inspect.isclass):
             if issubclass(c, Resource) and hasattr(c, "__routes__"):
