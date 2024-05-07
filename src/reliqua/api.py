@@ -36,18 +36,28 @@ class Api(falcon.App):
         version=None,
         desc=None,
         title=None,
+        license=None,
+        license_url=None,
+        contact_name=None,
+        openapi_highlight=True,
+        openapi_sort="alpha",
     ):
         """
         Create an API instance.
 
-        :param str url:            API URL used by Swagger UI
-        :param str swagger_url:    URL to Swagger instance
-        :param str resource_path:  Path to the resource modules
-        :param list middleware:    Middleware
-        :param str version:        Application version
-        :param str desc:           Application description
-        :param str title:          Application title
-        :param dict config:        API configuration parameters
+        :param str url:                 API URL used by Swagger UI
+        :param str swagger_url:         URL to Swagger instance
+        :param str resource_path:       Path to the resource modules
+        :param list middleware:         Middleware
+        :param str version:             Application version
+        :param str desc:                Application description
+        :param str title:               Application title
+        :param dict config:             API configuration parameters
+        :param str license:             API license
+        :param str license_url:         API License URL
+        :param str contact_name:        API Contact name
+        :param bool openapi_highlight:  Enable OpenAPI syntax highlighting
+        :param str openapi_sort:        OpenAPI endpoint/tag sort order
 
         :return:                   api instance
         """
@@ -59,6 +69,11 @@ class Api(falcon.App):
         self.version = version
         self.resources = []
         self.config = config or {}
+        self.license = license
+        self.license_url = license_url
+        self.contact_name = contact_name
+        self.openapi_highlight = openapi_highlight
+        self.openapi_sort = openapi_sort
 
         path = os.path.dirname(sys.modules[__name__].__file__)
         self.url = url
@@ -158,14 +173,16 @@ class Api(falcon.App):
                 self.add_route(route, resource, **kwargs)
 
     def _add_docs(self):
-        swagger = Swagger(self.openapi_static_url, self.openapi_spec_url)
+        swagger = Swagger(
+            self.openapi_static_url, self.openapi_spec_url, sort=self.openapi_sort, highlight=self.openapi_highlight
+        )
         openapi = OpenApi(
             title=self.title,
             description=self.desc,
             version=self.version,
-            license="Apache 2.0",
-            license_url="http://foo.com",
-            contact_name="Terrence Meiczinger",
+            license=self.license,
+            license_url=self.license_url,
+            contact_name=self.contact_name,
         )
         openapi.process_resources(self.resources)
         schema = openapi.schema()

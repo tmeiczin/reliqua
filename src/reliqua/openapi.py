@@ -39,6 +39,7 @@ TYPE_MAP = {
     "json": "object",
     "object": "object",
     "list": "array",
+    "dict": "object",
 }
 
 verbs = ["get", "patch", "put", "post", "delete"]
@@ -580,7 +581,10 @@ class OpenApi:
         )
         self.paths = {}
         self.components = {
-            "securitySchemes": {},
+            "securitySchemes": {
+                "basicAuth": {"type": "http", "scheme": "basic"},
+                "cookieAuth": {"type": "apiKey", "in": "cookie", "name": "babu_token"},
+            },
             "schemas": {
                 "null": {},
             },
@@ -609,4 +613,5 @@ class OpenApi:
             "info": self.info.dict(),
             "paths": self.paths,
             "components": self.components,
+            "security": [{"basicAuth": [], "cookieAuth": []}],
         }

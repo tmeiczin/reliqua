@@ -24,7 +24,7 @@ class Server(Resource):
         "servers",
     ]
 
-    def on_get_by_id(self, req, resp, id=None):
+    def on_get_by_id(self, _req, resp, id=None):
         """
         Retrieve servers.
 
@@ -33,7 +33,7 @@ class Server(Resource):
         :param str id:       [in=path, required] Server ID
 
         :response 200:       server was retrieved
-        :response 400:       invalid query paremeter
+        :response 400:       invalid query parameter
 
         :return json:
         """
@@ -61,7 +61,7 @@ class Servers(Resource):
         :param int cpus:     [in=query, required] Number of CPUs for server
 
         :response 200:       server  was retrieved
-        :response 400:       invalid query paremeter
+        :response 400:       invalid query parameter
 
         :return json:
         """
@@ -73,7 +73,7 @@ class Servers(Resource):
         except TypeError:
             resp.media = servers
 
-    def on_get_by_cpu(self, req, resp, cpu=1):
+    def on_get_by_cpu(self, _req, resp, cpus=1):
         """
         Retrieve a server by cpu.
 
@@ -82,11 +82,11 @@ class Servers(Resource):
         :param int cpus:     [in=path, required] Number of CPUs for server
 
         :response 200:       server  was retrieved
-        :response 400:       invalid query paremeter
+        :response 400:       invalid query parameter
 
         :return json:
         """
         try:
-            resp.media = servers[int(id)]
+            resp.media = servers[cpus]
         except IndexError:
             resp.status = HTTP("404")
