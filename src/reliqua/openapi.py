@@ -39,6 +39,7 @@ TYPE_MAP = {
     "json": "object",
     "object": "object",
     "list": "array",
+    "dict": "object",
 }
 
 verbs = ["get", "patch", "put", "post", "delete"]

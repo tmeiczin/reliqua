@@ -7,12 +7,14 @@ Copyright 2016-2024.
 from .status_codes import HTTP
 
 
-def index(spec, server):
+def index(spec, server, sort="alpha", highlight="true"):
     """
     Return the Swagger index HTML.
 
     This returns the Swagger index html contents.
     """
+    highlight = "true" if highlight else "false"
+
     return f"""<!-- HTML for static distribution bundle build -->
     <!DOCTYPE html>
     <html lang="en">
@@ -45,7 +47,10 @@ def index(spec, server):
             plugins: [
               SwaggerUIBundle.plugins.DownloadUrl
             ],
-            layout: "StandaloneLayout"
+            layout: "StandaloneLayout",
+            syntaxHighlight: "{highlight}",
+            operationsSorter : "{sort}",
+            tagsSorter: "{sort}"
           }});
       </script>
     </html>
@@ -55,7 +60,7 @@ def index(spec, server):
 class Swagger:
     """Class to server the static swagger files."""
 
-    def __init__(self, url, openapi_url):
+    def __init__(self, url, openapi_url, sort="alpha", highlight=True):
         """
         Create a Swagger instance.
 
@@ -65,6 +70,8 @@ class Swagger:
         """
         self.url = url
         self.openapi_url = openapi_url
+        self.highlight = highlight
+        self.sort = sort
 
     def on_get(self, _req, resp):
         """
@@ -77,4 +84,4 @@ class Swagger:
         """
         resp.status = HTTP(200)
         resp.content_type = "text/html"
-        resp.text = index(self.openapi_url, self.url)
+        resp.text = index(self.openapi_url, self.url, sort=self.sort, highlight=self.highlight)

@@ -212,7 +212,8 @@ class ProcessParams:
             name, _, operator = param.partition("__")
             if operator:
                 operators[name] = operator
-                request.params[name] = request.params.pop(param)
+                value = request.params.pop(param)
+                request.params[name] = (value, operator)
 
         return operators
 
@@ -249,9 +250,10 @@ class ProcessParams:
         transform = None
         operators = self._parse_operators(request)
 
-        # include operator if found and update parameter names
-        if operators:
-            request.params["operators"] = parameters.operators = operators
+        # update operators
+        for parameter in parameters:
+            if operators.get(parameter.name):
+                parameter.operators = operators[parameter.name]
 
         # use the docs schema to validate
         for parameter in parameters:

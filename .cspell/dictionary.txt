@@ -1,2 +1,3 @@
 camelcase
+docstrings
 Reliqua
