@@ -1,3 +1,4 @@
 camelcase
+cpus
 docstrings
 Reliqua

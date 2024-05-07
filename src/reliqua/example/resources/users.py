@@ -25,7 +25,7 @@ USER = {
     "properties": {
         "username": {
             "type": "string",
-            "examples": ["billybob"],
+            "examples": ["billy"],
         }
     },
 }
@@ -53,7 +53,7 @@ class User(Resource):
 
         :param str id:       [in=path, required] User ID
         :response 200 user:  User was retrieved
-        :response 400:       Invalid query paremeter
+        :response 400:       Invalid query parameter
 
         :return json:
         """
@@ -62,7 +62,7 @@ class User(Resource):
         except IndexError:
             resp.status = HTTP("404")
 
-    def on_delete_by_id(self, req, resp, id=None):
+    def on_delete_by_id(self, _req, resp, id=None):
         """
         Delete a user.
 

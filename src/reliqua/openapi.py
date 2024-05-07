@@ -581,7 +581,10 @@ class OpenApi:
         )
         self.paths = {}
         self.components = {
-            "securitySchemes": {},
+            "securitySchemes": {
+                "basicAuth": {"type": "http", "scheme": "basic"},
+                "cookieAuth": {"type": "apiKey", "in": "cookie", "name": "babu_token"},
+            },
             "schemas": {
                 "null": {},
             },
@@ -610,4 +613,5 @@ class OpenApi:
             "info": self.info.dict(),
             "paths": self.paths,
             "components": self.components,
+            "security": [{"basicAuth": [], "cookieAuth": []}],
         }
