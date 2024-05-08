@@ -114,6 +114,10 @@ class Converter:
         :param bool required:   ``True`` if the parameter is required else ``False``
         :return:                Converted parameter value
         """
+        # parameter data is already converted
+        if isinstance(req.params[name], dict):
+            return req.params[name]
+
         return req.get_param_as_json(name, default=default, required=required)
 
     @staticmethod

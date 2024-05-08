@@ -1,4 +1,4 @@
-"""
+"#""
 Reliqua Framework.
 
 Copyright 2016-2024.
@@ -120,6 +120,7 @@ class Users(Resource):
 
         :param str username:      [in=body, required]  Username
         :param str email:         [in=body, required]  Email
+        :param object config:     [in=body] Configuration data
 
         :return json:
         """
