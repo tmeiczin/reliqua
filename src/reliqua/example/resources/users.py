@@ -1,4 +1,4 @@
-"#""
+"""
 Reliqua Framework.
 
 Copyright 2016-2024.
@@ -44,10 +44,12 @@ class User(Resource):
         "users",
     ]
 
+    __auth_actions__ = ["POST", "DELETE"]
+
     user = USER
     phones = phones
 
-    def on_get_by_id(self, req, resp, id=None):
+    def on_get_by_id(self, _req, resp, id=None):
         """
         Return a user.
 
@@ -88,6 +90,7 @@ class Users(Resource):
         "users",
     ]
 
+    __auth_actions__ = ["GET", "POST", "DELETE"]
     users = USERS
 
     def on_get(self, req, resp):
@@ -103,6 +106,7 @@ class Users(Resource):
         """
         results = []
         p = req.params
+
         if any(p.values()):
             for user in users:
                 if user["username"] == p.get("username", None):

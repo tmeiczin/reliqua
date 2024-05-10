@@ -43,6 +43,7 @@ class Application(BaseApplication):
         api_url=None,
         swagger_url=None,
         workers=None,
+        worker_class="sync",
         threads=None,
         resource_path=None,
         loglevel=None,
@@ -50,23 +51,34 @@ class Application(BaseApplication):
         version=None,
         desc=None,
         title=None,
+        license=None,
+        license_url=None,
+        contact_name=None,
+        openapi_highlight=True,
+        openapi_sort="alpha",
     ):
         """
         Create Application instance.
 
-        :param str  bind:             Address and port to listen for requests [host:port]
-        :param str  api_url:          URL for API used by Swagger UI (if different from bind)
-        :param str  swagger_url:      URL to the Swagger UI
-        :param int  workers:          Number of worker processes
-        :param int  threads:          Optional number of worker threads per process
-        :param str  resource_path:    Path to the API resource modules
-        :param str  loglevel:         Log level (debug, error, info, critical)
-        :param list middleware:       Middleware
-        :param str  version:          Application version
-        :param str  desc:             Application description
-        :param str  title:            Application title
+        :param str  bind:               Address and port to listen for requests [host:port]
+        :param str  api_url:            URL for API used by Swagger UI (if different from bind)
+        :param str  swagger_url:        URL to the Swagger UI
+        :param int  workers:            Number of worker processes
+        :param int  workers_class:      Type of worker processes
+        :param int  threads:            Number of threads per worker process
+        :param str  resource_path:      Path to the API resource modules
+        :param str  loglevel:           Log level (debug, error, info, critical)
+        :param list middleware:         Middleware
+        :param str  version:            Application version
+        :param str  desc:               Application description
+        :param str  title:              Application title
+        :param str license:             API license
+        :param str license_url:         API License URL
+        :param str contact_name:        API Contact name
+        :param bool openapi_highlight:  Enable OpenAPI syntax highlighting
+        :param str openapi_sort:        OpenAPI endpoint/tag sort order
 
-        :return:                      Application instance
+        :return:                        Application instance
         """
         middleware = middleware or []
 
@@ -87,6 +99,7 @@ class Application(BaseApplication):
             "loglevel": loglevel or options["loglevel"],
             "accesslog": "-",
             "errorlog": "-",
+            "worker_class": worker_class,
         }
 
         # If a number of threads was specified, add that to the options.
@@ -106,9 +119,23 @@ class Application(BaseApplication):
             version=version,
             desc=desc,
             title=title,
+            license=license,
+            license_url=license_url,
+            contact_name=contact_name,
+            openapi_highlight=openapi_highlight,
+            openapi_sort=openapi_sort,
         )
 
         super().__init__()
+
+    def init(self, parser, opts, args):
+        """
+        Init method.
+
+        This is not invoked, since the load_config method
+        is also overridden.
+        """
+        return
 
     def load_config(self):
         """

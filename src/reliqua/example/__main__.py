@@ -9,6 +9,12 @@ import os
 import sys
 
 from reliqua import Application, load_config
+from reliqua.auth import AccessResource, BasicAuth
+
+
+def check_user(username, _password):
+    """Return if user is authenticated."""
+    return username == "ted"
 
 
 def main():
@@ -31,26 +37,33 @@ def main():
     parser.add_argument("--workers", help="Number of worker threads", default=workers)
     parser.add_argument("--config", help="Configuration file", default=None)
 
+    auth = BasicAuth(
+        control=AccessResource(),
+        validation=check_user,
+    )
     args = parser.parse_args()
-
+    middleware = [auth]
     if args.config:
         config = load_config(args.config)
-        for k, v in config.iteritems():
+        for k, v in config.items():
             if getattr(args, k, None):
                 setattr(args, k, v)
 
     app = Application(
         bind=f"{args.address}:{args.port}",
         workers=args.workers,
+        threads=2,
+        worker_class="gthread",
         resource_path=args.resource_path,
         api_url=args.api_url,
         version="1.0.0",
         desc="Example API",
         title="Reliqua Example",
+        loglevel="debug",
+        middleware=middleware,
     )
     app.run()
 
 
 if __name__ == "__main__":
-    """Execte main function."""
     main()

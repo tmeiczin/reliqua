@@ -15,6 +15,7 @@ import uuid
 import falcon
 from falcon_cors import CORS
 
+from .auth import Auth
 from .docs import Docs
 from .media_handlers import JSONHandler, TextHandler, YAMLHandler
 from .openapi import OpenApi
@@ -68,6 +69,7 @@ class Api(falcon.App):
         self.title = title
         self.version = version
         self.resources = []
+        self.auth = [x for x in middleware if isinstance(x, Auth)]
         self.config = config or {}
         self.license = license
         self.license_url = license_url
@@ -183,6 +185,7 @@ class Api(falcon.App):
             license=self.license,
             license_url=self.license_url,
             contact_name=self.contact_name,
+            auth=self.auth,
         )
         openapi.process_resources(self.resources)
         schema = openapi.schema()
