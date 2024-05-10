@@ -540,6 +540,7 @@ class OpenApi:
         contact_name="",
         contact_url="",
         contact_email="",
+        auth=None,
         parser=None,
     ):
         """
@@ -567,6 +568,7 @@ class OpenApi:
         self.version = version or "0.0.0"
         self.summary = summary or ""
         self.terms = terms or ""
+        self.auth = auth or []
 
         contact = Contact(name=contact_name, email=contact_email, url=contact_url)
         license = License(name=license, url=license_url)
@@ -580,15 +582,7 @@ class OpenApi:
             version=version,
         )
         self.paths = {}
-        self.components = {
-            "securitySchemes": {
-                "basicAuth": {"type": "http", "scheme": "basic"},
-                "cookieAuth": {"type": "apiKey", "in": "cookie", "name": "babu_token"},
-            },
-            "schemas": {
-                "null": {},
-            },
-        }
+        self.component_schemas = {}
         self.parser = parser
 
     def process_resources(self, resources):
@@ -604,7 +598,20 @@ class OpenApi:
             resource = ResourceSchema(resource)
             resource.parse()
             self.paths.update(resource.paths)
-            self.components["schemas"].update(resource.components)
+            self.component_schemas.update(resource.components)
+
+    @property
+    def security_schemes(self):
+        """Return security schemas."""
+        return {x.name: x.dict() for x in self.auth}
+
+    @property
+    def components(self):
+        """Return components."""
+        return {
+            "securitySchemes": self.security_schemes,
+            "schemas": self.component_schemas,
+        }
 
     def schema(self):
         """Return OpenAPI Schema."""
@@ -613,5 +620,5 @@ class OpenApi:
             "info": self.info.dict(),
             "paths": self.paths,
             "components": self.components,
-            "security": [{"basicAuth": [], "cookieAuth": []}],
+            "security": [{"BasicAuth": [], "CookieAuth": []}],
         }

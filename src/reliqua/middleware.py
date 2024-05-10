@@ -19,9 +19,14 @@ TRANSFORMS = {
     "boolean": bool,
     "bool": bool,
     "object": json.loads,
-    "list": json.loads,
-    "array": json.loads,
+    "list": list,
+    "array": list,
 }
+
+
+def python_type(s):
+    """Return Python type from string."""
+    return __builtins__.get(s)
 
 
 class Parameter:
@@ -136,11 +141,8 @@ class Converter:
         # handles cases where commas were encoded and bypassed Falcon's built-in conversion
         # also removes empty strings from list
         if isinstance(req.params[name], str) and req.params[name]:
-            req.params[name] = [x.strip() for x in req.params[name].split(",")]
-
-        # convert to list, if needed
-        if not isinstance(req.params[name], list):
-            req.params[name] = list(req.params[name])
+            value = req.params[name].strip("'\"").split(",")
+            req.params[name] = [x.strip() for x in value]
 
         items = req.get_param_as_list(name, default=default, required=required, transform=transform)
 
@@ -170,6 +172,11 @@ class Converter:
         :param str transform:        Transform method name
         :return:                     None
         """
+        # pre-check if already type converted and skip if needed
+        value = req.get_param(parameter.name, required=parameter.required)
+        if isinstance(value, python_type(parameter.datatype)):
+            return value
+
         converter = getattr(Converter, f"as_{parameter.datatype}", Converter.as_str)
         transform = TRANSFORMS.get(transform, str)
         default = transform(parameter.default) if transform and parameter.default else None
@@ -216,8 +223,7 @@ class ProcessParams:
             name, _, operator = param.partition("__")
             if operator:
                 operators[name] = operator
-                value = request.params.pop(param)
-                request.params[name] = (value, operator)
+                request.params[name] = request.params.pop(param)
 
         return operators
 
