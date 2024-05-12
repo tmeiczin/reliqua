@@ -278,8 +278,8 @@ class ProcessParams:
 
             # for operators in and between, datatype must be a list
             if operators.get(parameter.name) in ["in", "between"]:
-                parameter.datatype = "list"
-                transform = parameter.datatype
+                if "list" not in parameter.datatype:
+                    parameter.datatype = "list"
 
             if m := re.search(r"list\[(\w+)]", parameter.datatype):
                 parameter.datatype = "list"
