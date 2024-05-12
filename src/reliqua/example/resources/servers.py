@@ -58,20 +58,15 @@ class Servers(Resource):
 
         Retrieve server information
 
-        :param int cpus:     [in=query, required] Number of CPUs for server
+        :param list labs:     [in=query] The labs servers are located
 
         :response 200:       server  was retrieved
         :response 400:       invalid query parameter
 
         :return json:
         """
-        index = req.params.get("cpus")
-        try:
-            resp.media = servers[index]
-        except IndexError:
-            resp.status = HTTP("404")
-        except TypeError:
-            resp.media = servers
+        labs = req.params.get("labs")
+        resp.media = labs
 
     def on_get_by_cpu(self, _req, resp, cpus=1):
         """

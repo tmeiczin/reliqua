@@ -61,6 +61,11 @@ def main():
         title="Reliqua Example",
         loglevel="debug",
         middleware=middleware,
+        license="3-Clause BSD License",
+        license_url="https://opensource.org/license/bsd-3-clause",
+        contact_name="Terrence Meiczinger",
+        openapi_highlight=True,
+        openapi_sort="alpha",
     )
     app.run()
 
