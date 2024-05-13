@@ -9,7 +9,7 @@ import os
 import sys
 
 from reliqua import Application, load_config
-from reliqua.auth import AccessResource, BasicAuth, CookieAuth
+from reliqua.auth import AccessResource, BasicAuth, CookieAuth, MultiAuth
 
 
 def check_user(username, _password):
@@ -42,15 +42,17 @@ def main():
     parser.add_argument("--workers", help="Number of worker threads", default=workers)
     parser.add_argument("--config", help="Configuration file", default=None)
 
-    auth = BasicAuth(
+    basic_auth = BasicAuth(
         control=AccessResource(),
         validation=check_user,
     )
-    auth = CookieAuth(
+    cookie_auth = CookieAuth(
         "api_key",
         control=AccessResource(),
         validation=check_api_key,
     )
+
+    auth = MultiAuth([basic_auth, cookie_auth], control=AccessResource())
 
     args = parser.parse_args()
     middleware = [auth]
