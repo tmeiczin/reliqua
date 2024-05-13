@@ -212,9 +212,26 @@ class ApiAuth(Auth):
 
 
 class CookieAuth(ApiAuth):
-    """Cookie Authentication."""
+    """
+    Cookie Authentication.
+
+    This class provides cookie authentication. The caller must provide a
+    validation callback which accepts token and returns
+    user string. Any False like value will raise an error.
+    """
 
     location = "cookie"
+
+    def validate(self, token):
+        """
+        Validate the user.
+
+        :param str token:       Client token
+        :return str:            Username
+
+        This method must be passed in during instantiation.
+        """
+        raise NotImplementedError("authenticate method not implemented")
 
     def authenticate(self, req, _resp, _resource):
         """Return whether client is authenticated."""
@@ -222,45 +239,87 @@ class CookieAuth(ApiAuth):
         if api_key:
             api_key = api_key[0]
 
-        print(f"cookie {api_key}")
-        if not self.validation(api_key):
-            raise falcon.HTTPUnauthorized(description="Invalid authorization")
+        username = self.validation(api_key)
+        if not username:
+            raise falcon.HTTPUnauthorized(description="Invalid cookie authorization")
 
-        return True
+        return username
 
 
 class HeaderAuth(ApiAuth):
-    """Header Authentication."""
+    """
+    Header Authentication.
+
+    This class provides header authentication. The caller must provide a
+    validation callback which accepts token and returns
+    user string. Any False like value will raise an error.
+    """
 
     location = "header"
+
+    def validate(self, token):
+        """
+        Validate the user.
+
+        :param str token:       Client token
+        :return str:            Username
+
+        This method must be passed in during instantiation.
+        """
+        raise NotImplementedError("authenticate method not implemented")
 
     def authenticate(self, req, _resp, _resource):
         """Return whether client is authenticated."""
         api_key = req.get_header(self.parameter_name)
 
-        if not self.validation(api_key):
-            raise falcon.HTTPUnauthorized(description="Invalid authorization")
+        username = self.validation(api_key)
+        if not username:
+            raise falcon.HTTPUnauthorized(description="Invalid header authorization")
 
-        return True
+        return username
 
 
 class QueryAuth(ApiAuth):
-    """Query Authentication."""
+    """
+    Query Authentication.
+
+    This class provides query parameter authentication. The caller must provide a
+    validation callback which accepts token and returns
+    user string. Any False like value will raise an error.
+    """
 
     location = "query"
+
+    def validate(self, token):
+        """
+        Validate the user.
+
+        :param str token:       Client token
+        :return str:            Username
+
+        This method must be passed in during instantiation.
+        """
+        raise NotImplementedError("authenticate method not implemented")
 
     def authenticate(self, req, _resp, _resource):
         """Return whether client is authenticated."""
         api_key = req.params.get(self.parameter_name)
 
-        if not self.validation(api_key):
-            raise falcon.HTTPUnauthorized(description="Invalid authorization")
+        username = self.validation(api_key)
+        if not username:
+            raise falcon.HTTPUnauthorized(description="Invalid query authorization")
 
-        return True
+        return username
 
 
 class BasicAuth(Auth):
-    """Basic Authentication."""
+    """
+    Basic Authentication.
+
+    This class provides Basic authentication. The caller must provide a
+    validation callback which accepts a username and password and returns
+    user string. Any False like value will raise an error.
+    """
 
     def __init__(self, validation=None, control=None):
         """
@@ -279,6 +338,18 @@ class BasicAuth(Auth):
     def name(self):
         """Return auth name."""
         return self.__class__.__name__
+
+    def validate(self, username, password):
+        """
+        Validate the user.
+
+        :param str username:    Client username
+        :param str password:    Client password
+        :return str:            Username
+
+        This method must be passed in during instantiation.
+        """
+        raise NotImplementedError("authenticate method not implemented")
 
     def dict(self):
         """Return OpenAPI Schema."""
@@ -316,10 +387,12 @@ class BasicAuth(Auth):
         :return bool:     True if authenticated
         """
         username, password = self._credentials(req)
-        if not self.validation(username, password):
+
+        username = self.validation(username, password)
+        if not username:
             raise falcon.HTTPUnauthorized(description="Invalid authorization")
 
-        return True
+        return username
 
 
 class BearerAuth(Auth):
