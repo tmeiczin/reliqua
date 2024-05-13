@@ -48,7 +48,7 @@ def index(spec, server, sort="alpha", highlight="true"):
               SwaggerUIBundle.plugins.DownloadUrl
             ],
             layout: "StandaloneLayout",
-            syntaxHighlight: "{highlight}",
+            syntaxHighlight: {highlight},
             operationsSorter : "{sort}",
             tagsSorter: "{sort}"
           }});

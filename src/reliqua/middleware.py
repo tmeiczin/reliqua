@@ -257,16 +257,15 @@ class ProcessParams:
         :param list[Parameter] parameters:  List of parameters from the schema
         :return:                            None
         """
-        transform = None
         operators = self._parse_operators(request)
 
-        # update operators
-        for parameter in parameters:
-            if operators.get(parameter.name):
-                parameter.operators = operators[parameter.name]
+        # include operator dict in params if operators are found
+        if operators:
+            request.params["operators"] = operators
 
         # use the docs schema to validate
         for parameter in parameters:
+            transform = None
             present = parameter.name in request.params
 
             # check for required parameters

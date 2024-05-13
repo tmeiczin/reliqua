@@ -9,12 +9,17 @@ import os
 import sys
 
 from reliqua import Application, load_config
-from reliqua.auth import AccessResource, BasicAuth
+from reliqua.auth import AccessResource, BasicAuth, CookieAuth
 
 
 def check_user(username, _password):
     """Return if user is authenticated."""
     return username == "ted"
+
+
+def check_api_key(api_key):
+    """Return if user is authenticated."""
+    return api_key == "abc123"
 
 
 def main():
@@ -41,6 +46,12 @@ def main():
         control=AccessResource(),
         validation=check_user,
     )
+    auth = CookieAuth(
+        "api_key",
+        control=AccessResource(),
+        validation=check_api_key,
+    )
+
     args = parser.parse_args()
     middleware = [auth]
     if args.config:
