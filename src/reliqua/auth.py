@@ -142,7 +142,12 @@ class Auth:
 
     control = AccessControl()
 
-    def authenticate(self, _req, _resp):
+    @property
+    def name(self):
+        """Return auth name."""
+        return self.__class__.__name__
+
+    def authenticate(self, _req, _resp, _resource):
         """Return whether client is authenticated."""
         raise NotImplementedError("authenticate method not implemented")
 
@@ -163,7 +168,7 @@ class Auth:
         if self.control.exempt(req.uri_template, req.method, resource):
             return
 
-        req.context["user"] = self.authenticate(req, resp)
+        req.context["user"] = self.authenticate(req, resp, resource)
 
 
 class ApiAuth(Auth):
@@ -190,17 +195,19 @@ class ApiAuth(Auth):
         """Return auth name."""
         return self.__class__.__name__
 
-    def authenticate(self, _req, _resp):
+    def authenticate(self, _req, _resp, resource):
         """Return whether client is authenticated."""
         raise NotImplementedError("authenticate method not implemented")
 
     def dict(self):
         """Return OpenAPI Schema."""
         return {
-            "type": self.kind,
-            "name": self.parameter_name,
-            "in": self.location,
-            "description": self.description,
+            self.name: {
+                "type": self.kind,
+                "name": self.parameter_name,
+                "in": self.location,
+                "description": self.description,
+            }
         }
 
 
@@ -209,7 +216,7 @@ class CookieAuth(ApiAuth):
 
     location = "cookie"
 
-    def authenticate(self, req, _resp):
+    def authenticate(self, req, _resp, _resource):
         """Return whether client is authenticated."""
         api_key = req.get_cookie_values(self.parameter_name)
         if api_key:
@@ -227,7 +234,7 @@ class HeaderAuth(ApiAuth):
 
     location = "header"
 
-    def authenticate(self, req, _resp):
+    def authenticate(self, req, _resp, _resource):
         """Return whether client is authenticated."""
         api_key = req.get_header(self.parameter_name)
 
@@ -242,7 +249,7 @@ class QueryAuth(ApiAuth):
 
     location = "query"
 
-    def authenticate(self, req, _resp):
+    def authenticate(self, req, _resp, _resource):
         """Return whether client is authenticated."""
         api_key = req.params.get(self.parameter_name)
 
@@ -275,7 +282,12 @@ class BasicAuth(Auth):
 
     def dict(self):
         """Return OpenAPI Schema."""
-        return {"type": self.kind, "scheme": self.scheme}
+        return {
+            self.name: {
+                "type": self.kind,
+                "scheme": self.scheme,
+            },
+        }
 
     def _credentials(self, req):
         header = req.get_header("Authorization")
@@ -295,19 +307,19 @@ class BasicAuth(Auth):
 
         return username, password
 
-    def authenticate(self, req, _resp):
+    def authenticate(self, req, _resp, _resource):
         """
         Authenticate user.
 
         Authenticate with the credentials
 
-        :return str:     Username
+        :return bool:     True if authenticated
         """
         username, password = self._credentials(req)
         if not self.validation(username, password):
             raise falcon.HTTPUnauthorized(description="Invalid authorization")
 
-        return username
+        return True
 
 
 class BearerAuth(Auth):
@@ -327,10 +339,58 @@ class BearerAuth(Auth):
         """Return auth name."""
         return self.__class__.__name__
 
-    def authenticate(self, _req, _resp):
+    def authenticate(self, _req, _resp, _resource):
         """Return whether client is authenticated."""
         raise NotImplementedError("authenticate method not implemented")
 
     def dict(self):
         """Return OpenAPI Schema."""
-        return {"type": self.kind, "scheme": self.scheme}
+        return {
+            self.name: {
+                "type": self.kind,
+                "scheme": self.scheme,
+            }
+        }
+
+
+class MultiAuth(Auth):
+    """
+    MultiAuth class.
+
+    MultiAuth allows you to specify multiple auth mechanisms. They
+    will then be iterated until one if successful
+    """
+
+    def __init__(self, authenticators, control=None):
+        """
+        Create a MultiAuth instance.
+
+        :param list[Auth] auth:    A list of Authenticators
+        :return bool:               True if authenticated
+        """
+        self.authenticators = authenticators
+        self.control = control
+
+    def authenticate(self, request, response, resource):
+        """
+        Authenticate user.
+
+        Authenticate with the credentials
+
+        :return bool:        True if authenticated
+        """
+        for auth in self.authenticators:
+            try:
+                return auth.authenticate(request, response, resource)
+            except falcon.HTTPUnauthorized:
+                pass
+
+        raise falcon.HTTPUnauthorized(description="Invalid authorization")
+
+    def dict(self):
+        """Return OpenAPI Schema."""
+        schema = {}
+        for auth in self.authenticators:
+            schema.update(auth.dict())
+
+        return schema

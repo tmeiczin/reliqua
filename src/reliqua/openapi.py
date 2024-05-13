@@ -603,7 +603,11 @@ class OpenApi:
     @property
     def security_schemes(self):
         """Return security schemas."""
-        return {x.name: x.dict() for x in self.auth}
+        schema = {}
+        for x in self.auth:
+            schema.update(x.dict())
+
+        return schema
 
     @property
     def components(self):
