@@ -171,7 +171,7 @@ class ApiAuth(Auth):
 
     location = " any"
 
-    def __init__(self, name, description=None):
+    def __init__(self, name, description=None, validation=None, control=None):
         """
         Create an API authentication instance.
 
@@ -182,11 +182,17 @@ class ApiAuth(Auth):
         self.kind = "apiKey"
         self.parameter_name = name
         self.description = description
+        self.validation = validation
+        self.control = control
 
     @property
     def name(self):
         """Return auth name."""
         return self.__class__.__name__
+
+    def authenticate(self, _req, _resp):
+        """Return whether client is authenticated."""
+        raise NotImplementedError("authenticate method not implemented")
 
     def dict(self):
         """Return OpenAPI Schema."""
@@ -203,17 +209,47 @@ class CookieAuth(ApiAuth):
 
     location = "cookie"
 
+    def authenticate(self, req, _resp):
+        """Return whether client is authenticated."""
+        api_key = req.get_cookie_values(self.parameter_name)
+        if api_key:
+            api_key = api_key[0]
+
+        print(f"cookie {api_key}")
+        if not self.validation(api_key):
+            raise falcon.HTTPUnauthorized(description="Invalid authorization")
+
+        return True
+
 
 class HeaderAuth(ApiAuth):
     """Header Authentication."""
 
     location = "header"
 
+    def authenticate(self, req, _resp):
+        """Return whether client is authenticated."""
+        api_key = req.get_header(self.parameter_name)
+
+        if not self.validation(api_key):
+            raise falcon.HTTPUnauthorized(description="Invalid authorization")
+
+        return True
+
 
 class QueryAuth(ApiAuth):
     """Query Authentication."""
 
     location = "query"
+
+    def authenticate(self, req, _resp):
+        """Return whether client is authenticated."""
+        api_key = req.params.get(self.parameter_name)
+
+        if not self.validation(api_key):
+            raise falcon.HTTPUnauthorized(description="Invalid authorization")
+
+        return True
 
 
 class BasicAuth(Auth):
@@ -290,6 +326,10 @@ class BearerAuth(Auth):
     def name(self):
         """Return auth name."""
         return self.__class__.__name__
+
+    def authenticate(self, _req, _resp):
+        """Return whether client is authenticated."""
+        raise NotImplementedError("authenticate method not implemented")
 
     def dict(self):
         """Return OpenAPI Schema."""
