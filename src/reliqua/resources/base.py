@@ -13,6 +13,11 @@ class Resource:
     the application finds and adds routes.
     """
 
+    @property
+    def name(self):
+        """Return class name."""
+        return self.__class__.__name__
+
     def get_params(self, req, keys=None, exclude=None):
         """
         Retrieve the params from the request.

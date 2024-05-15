@@ -9,17 +9,28 @@ import os
 import sys
 
 from reliqua import Application, load_config
-from reliqua.auth import AccessResource, BasicAuth, CookieAuth, MultiAuth
+from reliqua.auth import (
+    AccessResource,
+    AuthMiddleware,
+    BasicAuthentication,
+    CookieAuthentication,
+)
 
 
 def check_user(username, _password):
     """Return if user is authenticated."""
-    return username == "ted"
+    if username == "ted":
+        return ("ted", "admin")
+
+    return None
 
 
 def check_api_key(api_key):
     """Return if user is authenticated."""
-    return api_key == "abc123"
+    if api_key == "abc123":
+        return ("ted", "admin")
+
+    return None
 
 
 def main():
@@ -42,17 +53,15 @@ def main():
     parser.add_argument("--workers", help="Number of worker threads", default=workers)
     parser.add_argument("--config", help="Configuration file", default=None)
 
-    basic_auth = BasicAuth(
-        control=AccessResource(),
+    basic_auth = BasicAuthentication(
         validation=check_user,
     )
-    cookie_auth = CookieAuth(
+    cookie_auth = CookieAuthentication(
         "api_key",
-        control=AccessResource(),
         validation=check_api_key,
     )
 
-    auth = MultiAuth([basic_auth, cookie_auth], control=AccessResource())
+    auth = AuthMiddleware([basic_auth, cookie_auth], control=AccessResource(default_mode="deny"))
 
     args = parser.parse_args()
     middleware = [auth]

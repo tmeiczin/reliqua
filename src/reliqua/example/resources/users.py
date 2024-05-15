@@ -44,8 +44,6 @@ class User(Resource):
         "users",
     ]
 
-    __auth_actions__ = ["POST", "DELETE"]
-
     user = USER
     phones = phones
 
@@ -90,7 +88,12 @@ class Users(Resource):
         "users",
     ]
 
-    __auth_actions__ = ["GET", "POST", "DELETE"]
+    __auth2__ = {
+        "GET": ["admin"],
+        "POST": ["admin"],
+        "DELETE": ["admin"],
+    }
+
     users = USERS
 
     def on_get(self, req, resp):
