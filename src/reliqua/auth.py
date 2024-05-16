@@ -677,6 +677,11 @@ class AuthMiddleware:
         user = None
         authorized = False
 
+        # if resource has explicit no_auth, always skip
+        # authentication.
+        if getattr(resource, "no_auth", False):
+            return
+
         # check if request requires authentication
         if not self.control.authentication_required(req.uri_template, req.method, resource):
             return

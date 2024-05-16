@@ -4,6 +4,8 @@ Reliqua framework.
 Copyright 2016-2024.
 """
 
+from reliqua.resources.base import Resource
+
 from .status_codes import HTTP
 
 
@@ -57,15 +59,20 @@ def index(spec, server, sort="alpha", highlight="true"):
     """
 
 
-class Swagger:
+class Swagger(Resource):
     """Class to server the static swagger files."""
 
-    def __init__(self, url, openapi_url, sort="alpha", highlight=True):
+    no_auth = True
+
+    def __init__(self, url, openapi_url, sort="alpha", highlight=True, authenticate=False):
         """
         Create a Swagger instance.
 
         :param str url:            URL to Swagger instance
-        :param str swagger_file:   URL to Swagger file
+        :param str openapi_url:    URL to OpenAPI spec
+        :param srt sort:           Tag/Endpoint sort order
+        :param bool highlight:     Syntax highlighting
+        :param bool authenticate:  Docs need authentication
         :return:                   None
         """
         self.url = url

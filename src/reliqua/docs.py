@@ -4,6 +4,8 @@ Reliqua Framework.
 Copyright 2016-2024.
 """
 
+from reliqua.resources.base import Resource
+
 
 def default_responses():
     """Return default response schema."""
@@ -17,7 +19,7 @@ def default_responses():
     }
 
 
-class Docs:
+class Docs(Resource):
     """
     Documents endpoint class.
 
@@ -58,6 +60,8 @@ class Docs:
     -- Return --
     The return type of the method.
     """
+
+    no_auth = True
 
     def __init__(self, schema):
         """
