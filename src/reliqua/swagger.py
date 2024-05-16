@@ -64,7 +64,7 @@ class Swagger(Resource):
 
     no_auth = True
 
-    def __init__(self, url, openapi_url, sort="alpha", highlight=True, authenticate=False):
+    def __init__(self, url, openapi_url, sort="alpha", highlight=True):
         """
         Create a Swagger instance.
 
