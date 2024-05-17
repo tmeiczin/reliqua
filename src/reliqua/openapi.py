@@ -42,6 +42,18 @@ TYPE_MAP = {
     "dict": "object",
 }
 
+DEFAULT_RESPONSE = {
+    "type": "object",
+    "properties": {
+        "message": {
+            "type": "string",
+            "examples": [
+                "example message",
+            ],
+        },
+    },
+}
+
 verbs = ["get", "patch", "put", "post", "delete"]
 
 
@@ -222,7 +234,7 @@ class Response:
         self.code = code
         self.description = description
         self.content = content or "application/json"
-        self.schema = schema or "null"
+        self.schema = schema if schema else "default_response"
 
     def __repr__(self):
         """Return a printable representational string."""
@@ -582,7 +594,9 @@ class OpenApi:
             version=version,
         )
         self.paths = {}
-        self.component_schemas = {}
+        self.component_schemas = {
+            "default_response": DEFAULT_RESPONSE,
+        }
         self.parser = parser
 
     def process_resources(self, resources):
@@ -610,6 +624,12 @@ class OpenApi:
         return schema
 
     @property
+    def security_names(self):
+        """Return security list."""
+        authenticators = [x for y in self.auth for x in y.authenticators]
+        return {x.name: [] for x in authenticators}
+
+    @property
     def components(self):
         """Return components."""
         return {
@@ -624,5 +644,5 @@ class OpenApi:
             "info": self.info.dict(),
             "paths": self.paths,
             "components": self.components,
-            "security": [{"BasicAuth": [], "CookieAuth": []}],
+            "security": self.security_names,
         }
