@@ -88,7 +88,7 @@ class Users(Resource):
         "users",
     ]
 
-    __auth2__ = {
+    __auth__ = {
         "GET": ["admin"],
         "POST": ["admin"],
         "DELETE": ["admin"],
@@ -101,9 +101,10 @@ class Users(Resource):
         Return users.
 
         :param str username:      [in=query]  Username
-        :param str email:         [in=query default=ted@invalid.com]  Email
+        :param str email:         [in=query default=ted@nowhere.com]  Email
         :param list[int] ids:     [in=query] List of IDs
         :response 200 users:      Users were retrieved
+        :response 401:            Invalid Authorization
 
         :return json:
         """

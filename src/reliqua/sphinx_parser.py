@@ -14,10 +14,10 @@ PARAM_ITER_REGEX = re.compile(
     r"^(:param.*?:.*?)(?:(?=:param)|(?=:return)|(?=:response)|(?=:accepts))",
     re.MULTILINE | re.DOTALL,
 )
-RESPONSE_ITER_REGEX = re.compile(r":response\s+(?P<code>\d+)\s*(?P<schema>\w+)?:\s+(?P<description>\w+)")
-RETURN_REGEX = re.compile(r"return\s+(\w+):|:return:\s+(\w+)")
+RESPONSE_ITER_REGEX = re.compile(r":response\s+(?P<code>\d+)\s*(?P<schema>\w+)?:\s+(?P<description>.*)")
+RETURN_REGEX = re.compile(r"return\s+(\w+):|:return:\s+(.*)")
 ACCEPT_REGEX = re.compile(r"accepts\s+(\w+):|:accepts:\s+(\w+)")
-KEYVALUE_REGEX = re.compile(r"(?P<key>\w+)=(?P<value>\w+)")
+KEYVALUE_REGEX = re.compile(r"(?P<key>\w+)=(?P<value>\S+)")
 OPERATION_REGEX = re.compile(r"on_(delete|get|patch|post|put)")
 SUFFIX_REGEX = re.compile(r"on_(?:delete|get|patch|post|put)_([a-zA-Z0-9_]+)")
 
