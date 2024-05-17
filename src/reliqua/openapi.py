@@ -627,7 +627,7 @@ class OpenApi:
     def security_names(self):
         """Return security list."""
         authenticators = [x for y in self.auth for x in y.authenticators]
-        return {x.name: [] for x in authenticators}
+        return [{x.name: []} for x in authenticators]
 
     @property
     def components(self):
