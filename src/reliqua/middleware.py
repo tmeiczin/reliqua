@@ -324,7 +324,6 @@ class ProcessParams:
 
         # combine parameters from query, path, and body
         for media_params in [params, request.get_media(default_when_empty=None)]:
-            print(media_params)
             if isinstance(media_params, dict):
                 request.params.update(media_params)
             elif isinstance(media_params, falcon.media.multipart.MultipartForm):
