@@ -27,6 +27,7 @@ CONTENT_MAP = {
     "jpeg": "image/jpeg",
     "png": "image/png",
     "gif": "image/gif",
+    "form": "multipart/form-data",
     "*/*": "*/*",
 }
 
@@ -114,6 +115,8 @@ class Parameter:
         if self.location == "path":
             self.required = True
 
+        print(f"Parameter: {self.name} {self.location}")
+
     @property
     def datatype(self):
         """Return the parameter datatype."""
@@ -171,7 +174,7 @@ class Parameter:
 
         :return bool:     True if in request body
         """
-        if self.location == "body":
+        if self.location in ["body", "form"]:
             return True
 
         return False
@@ -289,8 +292,18 @@ class Operation:
         self.parameters = [Parameter(**x) for x in parameters or []]
         self.responses = [Response(**x) for x in responses or []]
         self.return_type = return_type
-        self.accepts = accepts or "*/*"
-        self.body = {x.name: x.dict() for x in self.parameters if x.in_request_body()}
+        self._accepts = accepts
+        self.request_body_parameters = {x.name: x.dict() for x in self.parameters if x.in_request_body()}
+
+    @property
+    def accepts(self):
+        """Return accepts type."""
+        if self._accepts:
+            return self._accepts
+        if self.has_form():
+            return "form"
+
+        return "*/*"
 
     def binary_body(self):
         """Return binary body."""
@@ -306,20 +319,30 @@ class Operation:
             }
         }
 
-    def json_body(self):
-        """Return JSON body."""
+    def has_form(self):
+        """
+        Return whether operation has form data.
+
+        Return `True` if the operation has form data parameters.
+
+        :return bool:     True if has form data
+        """
+        return [x for x in self.parameters if x.location == "form"] != []
+
+    def body(self):
+        """Return request body."""
         accepts = CONTENT_MAP.get(self.accepts)
         return {
             "description": self.description,
-            "content": {accepts: {"schema": {"type": "object", "properties": self.body}}},
+            "content": {accepts: {"schema": {"type": "object", "properties": self.request_body_parameters}}},
         }
 
     def request_body(self):
         """Return request body."""
-        if self.accepts == "binary":
+        if self.accepts in ["binary"]:
             return self.binary_body()
 
-        return self.json_body()
+        return self.body()
 
     def dict(self):
         """Return dict of data."""
@@ -331,7 +354,7 @@ class Operation:
             "parameters": [x.dict() for x in self.parameters if not x.in_request_body()],
             "responses": {x.code: x.dict() for x in self.responses},
         }
-        if self.body:
+        if self.request_body_parameters:
             operation["requestBody"] = self.request_body()
 
         return {self.operation: operation}
