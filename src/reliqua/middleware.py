@@ -290,6 +290,24 @@ class ProcessParams:
                 transform=transform,
             )
 
+    def process_form(self, form):
+        """
+        Process form data.
+
+        Process the fields from the form data.
+
+        :param MultipartForm form:    The multi-part form
+        """
+        data = {}
+
+        for part in form:
+            if part.content_type == "text/plain":
+                data[part.name] = part.text
+            if part.content_type == "application/json":
+                data[part.name] = part.get_media()
+
+        return data
+
     def process_resource(self, request, _response, resource, params):
         """
         Process resource.
@@ -307,6 +325,9 @@ class ProcessParams:
         # combine parameters from query, path, and body
         for media_params in [params, request.get_media(default_when_empty=None)]:
             if isinstance(media_params, dict):
+                request.params.update(media_params)
+            elif isinstance(media_params, falcon.media.multipart.MultipartForm):
+                media_params = self.process_form(media_params)
                 request.params.update(media_params)
 
         # if resource has no schema, skip further processing
