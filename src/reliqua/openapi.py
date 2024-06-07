@@ -163,6 +163,7 @@ class Parameter:
 
         if self.in_request_body():
             _schema["description"] = self.description
+            _schema["required"] = self.required
 
         return _schema
 
