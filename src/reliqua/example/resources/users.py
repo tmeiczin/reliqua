@@ -126,7 +126,7 @@ class Users(Resource):
         """
         Create a new user.
 
-        :param str username:      [in=body required]  Username
+        :param str username:      [in=body required=true]  Username
         :param str email:         [in=body required=true]  Email
         :param object config:     [in=body] Configuration data
 

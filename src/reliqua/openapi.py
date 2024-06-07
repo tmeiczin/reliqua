@@ -333,9 +333,10 @@ class Operation:
     def body(self):
         """Return request body."""
         accepts = CONTENT_MAP.get(self.accepts)
+        required = [k for k, v  in self.request_body_parameters.items() if v.get("required") is True]
         return {
             "description": self.description,
-            "content": {accepts: {"schema": {"type": "object", "properties": self.request_body_parameters}}},
+            "content": {accepts: {"schema": {"type": "object", "required": required, "properties": self.request_body_parameters}}},
         }
 
     def request_body(self):
