@@ -74,7 +74,7 @@ class Servers(Resource):
 
         Retrieve server information by cpu
 
-        :param int cpus:     [in=path, required] Number of CPUs for server
+        :param int cpus:     [in=path required] Number of CPUs for server
 
         :response 200:       server  was retrieved
         :response 400:       invalid query parameter
