@@ -28,6 +28,7 @@ USER = {
             "examples": ["billy"],
         }
     },
+    "required": ["username"],
 }
 
 USERS = {"type": "array", "items": {"$ref": "#/components/schemas/user"}}
