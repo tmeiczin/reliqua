@@ -115,8 +115,6 @@ class Parameter:
         if self.location == "path":
             self.required = True
 
-        print(f"Parameter: {self.name} {self.location}")
-
     @property
     def datatype(self):
         """Return the parameter datatype."""
