@@ -56,13 +56,12 @@ class SphinxParser:
             "min": None,
             "max": None,
         }
-
         for match in KEYVALUE_REGEX.finditer(string):
             items = match.groupdict()
             options[items["key"]] = items["value"]
 
         # rename in to location
-        options["location"] = options.pop("in")
+        options["location"] = options.pop("in", "query")
         options["required"] = True if "required" in string and "optional" not in string else False
 
         return options
