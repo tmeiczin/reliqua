@@ -21,3 +21,4 @@ jobs:
     - name: Analysing the code with ruff
       run: |
         ruff check $(git ls-files '*.py')
+        ruff format --diff $(git ls-files '*.py')
