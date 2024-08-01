@@ -7,18 +7,6 @@ Copyright 2016-2024.
 from reliqua.resources.base import Resource
 
 
-def default_responses():
-    """Return default response schema."""
-    return {
-        "200": {
-            "description": "Successful operation",
-        },
-        "400": {
-            "description": "Bad input values",
-        },
-    }
-
-
 class Docs(Resource):
     """
     Documents endpoint class.

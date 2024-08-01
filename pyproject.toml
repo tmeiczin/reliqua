@@ -49,9 +49,6 @@ dev = [
     "bump2version"
 ]
 
-[project.scripts]
-reliqua-example = "reliqua.example.__main__:main"
-
 [tool.setuptools]
 include-package-data = true
 
