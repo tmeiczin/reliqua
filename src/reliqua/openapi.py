@@ -417,9 +417,9 @@ class ResourceSchema:
         for response in operation["responses"]:
             name = response["schema"]
             if name:
-                 schema = getattr(self.resource, name, {})
+                schema = getattr(self.resource, name, {})
             else:
-                 schema = {response["code"]: response["description"]}
+                schema = {response["code"]: response["description"]}
 
             if schema:
                 self.components[name] = schema
