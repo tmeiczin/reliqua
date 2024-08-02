@@ -209,7 +209,7 @@ class ProcessParams:
         if parameter.required and not value:
             raise falcon.HTTPBadRequest(
                 title="Bad Request",
-                description=f"Missing parameter {parameter.name}",
+                description=f"Missing parameter '{parameter.name}'",
             )
 
     def _convert(self, request, parameter):

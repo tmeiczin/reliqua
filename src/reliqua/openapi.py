@@ -416,7 +416,11 @@ class ResourceSchema:
         """
         for response in operation["responses"]:
             name = response["schema"]
-            schema = getattr(self.resource, name, {})
+            if name:
+                schema = getattr(self.resource, name, {})
+            else:
+                schema = {response["code"]: response["description"]}
+
             if schema:
                 self.components[name] = schema
 
