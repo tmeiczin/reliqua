@@ -22,6 +22,7 @@ CONTENT_MAP = {
     "json": "application/json",
     "yaml": "application/yaml",
     "xml": "application/xml",
+    "gzip": "application/gzip",
     "html": "text/html; charset=utf-8",
     "text": "text/plain; charset=utf-8",
     "jpeg": "image/jpeg",
@@ -30,6 +31,9 @@ CONTENT_MAP = {
     "form": "multipart/form-data",
     "*/*": "*/*",
 }
+
+
+BINARY_TYPES = ["binary", "gzip", "jpeg", "gif"]
 
 
 TYPE_MAP = {
@@ -235,7 +239,8 @@ class Response:
         """
         self.code = code
         self.description = description
-        self.content = content or "application/json"
+        self.content = content
+        print(f"RESPONSE ===> {content}")
         self.schema = schema if schema else "default_response"
 
     def __repr__(self):
@@ -244,9 +249,13 @@ class Response:
 
     def dict(self):
         """Return dict of data."""
+        content_types = [CONTENT_MAP.get(x) for x in self.content]
+        schema = {"$ref": f"#/components/schemas/{self.schema}"}
+        content = {x: schema for x in content_types}
+
         return {
             "description": self.description,
-            "content": {self.content: {"schema": {"$ref": f"#/components/schemas/{self.schema}"}}},
+            "content": content,
         }
 
 
@@ -263,34 +272,39 @@ class Operation:
         tags=None,
         responses=None,
         callbacks=None,
-        return_type=None,
+        return_types=None,
         accepts=None,
         **_kwargs,
     ):
         """
         Create operation instance.
 
-        :param str operation:     HTTP operation
-        :param str summary:       Summary
-        :param str description:   Description
-        :param str operation_id:  Operation ID
-        :param list parameters:   List of parameter dicts
-        :param list tags:         List of tags
-        :param list responses:    List of response dicts
-        :param list callbacks:    List of callbacks
-        :param str return_type:   Return content type
-        :param str accepts:       Accepts type
+        :param str operation:           HTTP operation
+        :param str summary:             Summary
+        :param str description:         Description
+        :param str operation_id:        Operation ID
+        :param list parameters:         List of parameter dicts
+        :param list tags:               List of tags
+        :param list responses:          List of response dicts
+        :param list callbacks:          List of callbacks
+        :param list[str] return_types:  Return content type
+        :param list[str] accepts:       Accept types
         :return:
         """
         self.operation = operation
         self.summary = summary
         self.description = description
         self.operation_id = operation_id
+        self.return_types = return_types
         self.tags = tags or []
         self.callbacks = callbacks or {}
         self.parameters = [Parameter(**x) for x in parameters or []]
-        self.responses = [Response(**x) for x in responses or []]
-        self.return_type = return_type
+        print(">>>>>>>>>>>>>>>")
+        print(responses)
+        print(f"accepts: {accepts}")
+        print(f"return_types {return_types}")
+        self.responses = [Response(**x, content=return_types) for x in responses or []]
+        print("<<<<<<<<<<<<<<<")
         self._accepts = accepts
         self.request_body_parameters = {x.name: x.dict() for x in self.parameters if x.in_request_body()}
 
@@ -330,20 +344,19 @@ class Operation:
 
     def body(self):
         """Return request body."""
-        accepts = CONTENT_MAP.get(self.accepts)
+        accepts = [CONTENT_MAP.get(x) for x in self.accepts]
         required = [k for k, v in self.request_body_parameters.items() if v.get("required") is True]
+        schema = {"type": "object", "required": required, "properties": self.request_body_parameters}
+        content = {x: schema for x in accepts}
+
         return {
             "description": self.description,
-            "content": {
-                accepts: {
-                    "schema": {"type": "object", "required": required, "properties": self.request_body_parameters}
-                }
-            },
+            "content": content,
         }
 
     def request_body(self):
         """Return request body."""
-        if self.accepts in ["binary"]:
+        if self.accepts in BINARY_TYPES:
             return self.binary_body()
 
         return self.body()

@@ -15,8 +15,8 @@ PARAM_ITER_REGEX = re.compile(
     re.MULTILINE | re.DOTALL,
 )
 RESPONSE_ITER_REGEX = re.compile(r":response\s+(?P<code>\d+)\s*(?P<schema>\w+)?:\s+(?P<description>.*)")
-RETURN_REGEX = re.compile(r"return\s+(\w+):|:return:\s+(.*)")
-ACCEPT_REGEX = re.compile(r"accepts\s+(\w+):|:accepts:\s+(\w+)")
+RETURN_REGEX = re.compile(r":return[s]*\s*(\[(.*?)\]|\w+)")
+ACCEPT_REGEX = re.compile(r":accepts\s*(\[(.*?)\]|\w+)")
 KEYVALUE_REGEX = re.compile(r"(?P<key>\w+)=(?P<value>\S+)")
 OPERATION_REGEX = re.compile(r"on_(delete|get|patch|post|put)")
 SUFFIX_REGEX = re.compile(r"on_(?:delete|get|patch|post|put)_([a-zA-Z0-9_]+)")
@@ -124,10 +124,13 @@ class SphinxParser:
     @property
     def accepts(self):
         """Return accepts type."""
-        if match := ACCEPT_REGEX.search(self.doc):
-            return match.group(1) or match.group(2)
+        m = ACCEPT_REGEX.search(self.doc)
 
-        return ""
+        if not m:
+            return []
+
+        parsed = m.group(1).strip("[]") or "json"
+        return re.split(r",\s*|\s+", parsed)
 
     @property
     def responses(self):
@@ -144,10 +147,13 @@ class SphinxParser:
     @property
     def content(self):
         """Return content."""
-        if match := RETURN_REGEX.search(self.doc):
-            return match.group(1) or match.group(2)
+        m = RETURN_REGEX.search(self.doc)
 
-        return "json"
+        if not m:
+            return ["json"]
+
+        parsed = m.group(1).strip("[]") or "json"
+        return re.split(r",\s*|\s+", parsed)
 
     @staticmethod
     def generate_operation_id(method):
@@ -207,6 +213,6 @@ class SphinxParser:
             "description": self.description,
             "parameters": self.parameters,
             "responses": self.responses,
-            "return_type": self.content,
+            "return_types": self.content,
             "accepts": self.accepts,
         }

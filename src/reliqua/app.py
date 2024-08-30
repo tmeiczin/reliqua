@@ -87,7 +87,7 @@ class Application(BaseApplication):
             "workers": 5,
             "api_url": None,
             "resource_path": "resource",
-            "loglevel": "info",
+            "loglevel": "critical",
         }
 
         api_url = api_url or options["api_url"]

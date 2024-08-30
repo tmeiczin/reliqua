@@ -52,11 +52,11 @@ class User(Resource):
         """
         Return a user.
 
-        :param str id:       [in=path, required] User ID
-        :response 200 user:  User was retrieved
-        :response 400:       Invalid query parameter
+        :param str id:         [in=path, required] User ID
+        :response 200 user:    User was retrieved
+        :response 400:         Invalid query parameter
 
-        :return json:
+        :return [json,xml]:
         """
         try:
             resp.media = users[int(id)]
@@ -104,10 +104,10 @@ class Users(Resource):
         :param str username:      [in=query]  Username
         :param str email:         [in=query default=ted@nowhere.com]  Email
         :param list[int] ids:     [in=query] List of IDs
+
         :response 200 users:      Users were retrieved
         :response 401:            Invalid Authorization
-
-        :return json:
+        :return [json xml]:       Return JSON of users
         """
         results = []
         p = req.params
@@ -131,6 +131,7 @@ class Users(Resource):
         :param str email:         [in=body required=true]  Email
         :param object config:     [in=body] Configuration data
 
+        :accepts [json xml]:      The body content type
         :return json:
         """
         p = req.params
