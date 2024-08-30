@@ -240,7 +240,6 @@ class Response:
         self.code = code
         self.description = description
         self.content = content
-        print(f"RESPONSE ===> {content}")
         self.schema = schema if schema else "default_response"
 
     def __repr__(self):
@@ -250,7 +249,7 @@ class Response:
     def dict(self):
         """Return dict of data."""
         content_types = [CONTENT_MAP.get(x) for x in self.content]
-        schema = {"$ref": f"#/components/schemas/{self.schema}"}
+        schema = {"schema": {"$ref": f"#/components/schemas/{self.schema}"}}
         content = {x: schema for x in content_types}
 
         return {
@@ -299,12 +298,7 @@ class Operation:
         self.tags = tags or []
         self.callbacks = callbacks or {}
         self.parameters = [Parameter(**x) for x in parameters or []]
-        print(">>>>>>>>>>>>>>>")
-        print(responses)
-        print(f"accepts: {accepts}")
-        print(f"return_types {return_types}")
         self.responses = [Response(**x, content=return_types) for x in responses or []]
-        print("<<<<<<<<<<<<<<<")
         self._accepts = accepts
         self.request_body_parameters = {x.name: x.dict() for x in self.parameters if x.in_request_body()}
 
@@ -346,7 +340,7 @@ class Operation:
         """Return request body."""
         accepts = [CONTENT_MAP.get(x) for x in self.accepts]
         required = [k for k, v in self.request_body_parameters.items() if v.get("required") is True]
-        schema = {"type": "object", "required": required, "properties": self.request_body_parameters}
+        schema = {"schema": {"type": "object", "required": required, "properties": self.request_body_parameters}}
         content = {x: schema for x in accepts}
 
         return {
