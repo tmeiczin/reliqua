@@ -65,6 +65,7 @@ def main():
 
     args = parser.parse_args()
     middleware = [auth]
+    middleware = []
     if args.config:
         config = load_config(args.config)
         for k, v in config.items():
@@ -81,7 +82,8 @@ def main():
         version="1.0.0",
         desc="Example API",
         title="Reliqua Example",
-        loglevel="debug",
+        loglevel="info",
+        accesslog=None,
         middleware=middleware,
         license="3-Clause BSD License",
         license_url="https://opensource.org/license/bsd-3-clause",
