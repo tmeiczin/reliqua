@@ -83,6 +83,7 @@ def main():
         desc="Example API",
         title="Reliqua Example",
         loglevel="info",
+        accesslog=None,
         middleware=middleware,
         license="3-Clause BSD License",
         license_url="https://opensource.org/license/bsd-3-clause",

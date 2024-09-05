@@ -55,8 +55,8 @@ class User(Resource):
         :param str id:         [in=path, required] User ID
         :response 200 user:    User was retrieved
         :response 400:         Invalid query parameter
-
-        :return [json,xml]:
+        :accepts [json,xml]:   Accept types
+        :return [json,xml]:    Return content type
         """
         try:
             resp.media = users[int(id)]
@@ -107,6 +107,7 @@ class Users(Resource):
 
         :response 200 users:      Users were retrieved
         :response 401:            Invalid Authorization
+        :accepts [json,xml]:      Accept types
         :return [json xml]:       Return JSON of users
         """
         results = []

@@ -47,6 +47,8 @@ class Application(BaseApplication):
         threads=None,
         resource_path=None,
         loglevel=None,
+        accesslog="-",
+        errorlog="-",
         middleware=None,
         version=None,
         desc=None,
@@ -68,6 +70,8 @@ class Application(BaseApplication):
         :param int  threads:            Number of threads per worker process
         :param str  resource_path:      Path to the API resource modules
         :param str  loglevel:           Log level (debug, error, info, critical)
+        :param str  accesslog:          Access log path ("-" for stream, None to disable)
+        :param str  errorlog:           Error log path ("-" for stream, None to disable)
         :param list middleware:         Middleware
         :param str  version:            Application version
         :param str  desc:               Application description
@@ -97,8 +101,8 @@ class Application(BaseApplication):
             "bind": bind or options["bind"],
             "workers": workers or options["workers"],
             "loglevel": loglevel or options["loglevel"],
-            "accesslog": "-",
-            "errorlog": "-",
+            "accesslog": accesslog,
+            "errorlog": errorlog,
             "worker_class": worker_class,
         }
 
