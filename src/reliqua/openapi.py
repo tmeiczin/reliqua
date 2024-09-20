@@ -299,7 +299,7 @@ class Operation:
         self.callbacks = callbacks or {}
         self.parameters = [Parameter(**x) for x in parameters or []]
         self.responses = [Response(**x, content=return_types) for x in responses or []]
-        self._accepts = accepts
+        self._accepts = accepts or ["*/*"]
         self.request_body_parameters = {x.name: x.dict() for x in self.parameters if x.in_request_body()}
 
     @property
@@ -308,9 +308,9 @@ class Operation:
         if self._accepts:
             return self._accepts
         if self.has_form():
-            return "form"
+            return ["form"]
 
-        return "*/*"
+        return ["*/*"]
 
     def binary_body(self):
         """Return binary body."""
