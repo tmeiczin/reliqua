@@ -11,10 +11,10 @@ import sys
 from reliqua import Application, load_config
 from reliqua.auth import (
     AccessResource,
+    AuthenticationContext,
     AuthMiddleware,
     BasicAuthentication,
     CookieAuthentication,
-    AuthenticationContext,
 )
 
 
