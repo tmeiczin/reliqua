@@ -27,6 +27,22 @@ def is_base64(data):
     return True
 
 
+class AuthenticationContext:
+    """
+    Authentication context.
+
+    A generic container for authentication details. This allows for the implementations
+    for the authorization and authentication to be flexible. The minimal requirement
+    is for the authentication callback to return role attribute.
+    """
+
+    role = None
+
+    def __init__(self, **kwargs):
+        """Create AuthenticationContext instance."""
+        self.__dict__.update(kwargs)
+
+
 class AccessControl:
     """
     Access control class.
@@ -38,10 +54,11 @@ class AccessControl:
     requires authentication.
 
     The `authorized` method returns whether the client is authorized
-    to execute the call.
+    to execute the call. The authorized takes an `AuthenticationContext`
+    which may have implentation specific details.
     """
 
-    def authorized(self, role, _route, _method, _resource):
+    def authorized(self, context, _route, _method, _resource):
         """Return whether client is allowed to access resource."""
         raise NotImplementedError("authorized method not implemented")
 
@@ -55,7 +72,7 @@ class AccessCallback(AccessControl):
     Access callback.
 
     Access control is checked by calling a user defined methods. The called method
-    will be supplied the endpoint, route, and HTTP method. The called method
+    will be supplied the endpoint, authentication context, and HTTP method. The called method
     must return `True` or `False`.
     """
 
@@ -69,19 +86,20 @@ class AccessCallback(AccessControl):
         self.authenticate_callback = authenticate_callback
         self.authorized_callback = authorized_callback
 
-    def authorized(self, role, route, method, _resource):
+    def authorized(self, context, route, method, _resource):
         """
         Return whether the route or method is authorized.
 
         Return whether the route or method is allowed for the
-        given role.
+        given role. The context is a generic type to allow
+        for an implementation specific details.
 
-        :param str role:     Role of client
-        :param str route:    Route being called
-        :param str method:   HTTP method invoked
-        :return bool:        True if authorized
+        :param object context:  Authenticated context
+        :param str route:       Route being called
+        :param str method:      HTTP method invoked
+        :return bool:           True if authorized
         """
-        return self.authorized_callback(role, route, method)
+        return self.authorized_callback(context, route, method)
 
     def authentication_required(self, route, method, _resource):
         """
@@ -119,7 +137,7 @@ class AccessList(AccessControl):
         self.methods = [x.lower() for x in methods]
         self.default_mode = default_mode
 
-    def authorized(self, role, _route, _method, _resource):
+    def authorized(self, context, _route, _method, _resource):
         """Return whether client is allowed to access resource."""
         raise NotImplementedError("authorized method not implemented")
 
@@ -186,18 +204,18 @@ class AccessMap(AccessControl):
         """
         self.access_map = access_map
 
-    def authorized(self, role, route, method, _resource):
+    def authorized(self, context, route, method, _resource):
         """
         Return whether client is allowed to access resource.
 
-        :param str role:     Client role
-        :param str route:    Route being called
-        :param str method:   HTTP method being invoked
-        :return bool:        True if authorized
+        :param object context:  Authentication context
+        :param str route:       Route being called
+        :param str method:      HTTP method being invoked
+        :return bool:           True if authorized
         """
         route = self.access_map.get(route)
         roles = route.get("*") or route.get(method)
-        if role in roles or "*" in roles:
+        if context.role in roles or "*" in roles:
             return True
 
         return False
@@ -261,11 +279,11 @@ class AccessResource(AccessControl):
         self.default_mode = default_mode
         self.raise_on_undefined = raise_on_undefined
 
-    def authorized(self, role, _route, method, resource):
+    def authorized(self, context, _route, method, resource):
         """
         Return whether client is allowed to access resource.
 
-        :param str role:             Client role
+        :param object context:       Authentication context
         :param str method:           HTTP method being invoked
         :param Resource resource:    Route resource
         :return bool:                True if authorized
@@ -281,7 +299,7 @@ class AccessResource(AccessControl):
 
             return True
 
-        if role in roles or "*" in roles:
+        if context.role in roles or "*" in roles:
             return True
 
         return False
@@ -674,7 +692,6 @@ class AuthMiddleware:
         :param dict params:          Additional parameters from the URI
         :return:
         """
-        user = None
         authorized = False
 
         # if resource has explicit no_auth, always skip
@@ -687,17 +704,15 @@ class AuthMiddleware:
             return
 
         # authenticate user
-        user, *role = self.authenticate(req, resp, resource)
-        role = role[0] if role else None
+        auth = self.authenticate(req, resp, resource)
 
-        # if a role is returned check if authorized
-        if role:
-            authorized = self.control.authorized(role, req.uri_template, req.method, resource)
+        # if an auth contecxt is returned check if authorized
+        if auth:
+            authorized = self.control.authorized(auth, req.uri_template, req.method, resource)
             if not authorized:
                 raise falcon.HTTPUnauthorized(
-                    description=f"role {role} is not authorized to {req.method} {req.uri_template}"
+                    description=f"role {auth.role} is not authorized to {req.method} {req.uri_template}"
                 )
 
-        req.context["role"] = role
+        req.context["authentication"] = auth
         req.context["authorized"] = authorized
-        req.context["user"] = user

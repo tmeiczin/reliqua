@@ -14,13 +14,14 @@ from reliqua.auth import (
     AuthMiddleware,
     BasicAuthentication,
     CookieAuthentication,
+    AuthenticationContext,
 )
 
 
 def check_user(username, _password):
     """Return if user is authenticated."""
     if username == "ted":
-        return ("ted", "admin")
+        return AuthenticationContext(user="ted", role="admin")
 
     return None
 
@@ -28,7 +29,7 @@ def check_user(username, _password):
 def check_api_key(api_key):
     """Return if user is authenticated."""
     if api_key == "abc123":
-        return ("ted", "admin")
+        return AuthenticationContext(name="ted", role="admin")
 
     return None
 
@@ -65,7 +66,6 @@ def main():
 
     args = parser.parse_args()
     middleware = [auth]
-    middleware = []
     if args.config:
         config = load_config(args.config)
         for k, v in config.items():
