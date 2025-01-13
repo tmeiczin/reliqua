@@ -45,6 +45,10 @@ class User(Resource):
         "users",
     ]
 
+    __auth__ = {
+        "get": ["admin"],
+    }
+
     user = USER
     phones = phones
 
@@ -52,7 +56,7 @@ class User(Resource):
         """
         Return a user.
 
-        :param str id:         [in=path, required] User ID
+        :param str id:         [in=path required] User ID
         :response 200 user:    User was retrieved
         :response 400:         Invalid query parameter
         :accepts [json,xml]:   Accept types
