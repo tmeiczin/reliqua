@@ -72,24 +72,38 @@ def main():
             if getattr(args, k, None):
                 setattr(args, k, v)
 
+    gunicorn = {
+        "bind": f"{args.address}:{args.port}",
+        "workers": args.workers,
+        "worker_class": "gthread",
+        "threads": 2,
+    }
+
+    info = {
+        "title": "Reliqua Example",
+        "version": "1.0.0",
+        "description": "Example API",
+        "license": "3-Clause BSD License",
+        "license_url": "https://opensource.org/license/bsd-3-clause",
+        "contact_name": "Terrence Meiczinger",
+    }
+
+    openapi = {
+        "highlight": True,
+        "sort": "alpha",
+    }
+
     app = Application(
-        bind=f"{args.address}:{args.port}",
-        workers=args.workers,
-        threads=2,
-        worker_class="gthread",
         resource_path=args.resource_path,
         api_url=args.api_url,
-        version="1.0.0",
-        desc="Example API",
-        title="Reliqua Example",
         loglevel="info",
         accesslog=None,
         middleware=middleware,
-        license="3-Clause BSD License",
-        license_url="https://opensource.org/license/bsd-3-clause",
-        contact_name="Terrence Meiczinger",
-        openapi_highlight=True,
-        openapi_sort="alpha",
+        config=vars(args),
+        resource_attributes={"random": "example"},
+        info=info,
+        openapi=openapi,
+        gunicorn_options=gunicorn,
     )
     app.run()
 

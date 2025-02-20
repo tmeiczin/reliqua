@@ -46,7 +46,7 @@ class User(Resource):
     ]
 
     __auth__ = {
-        "get": ["admin"],
+        "put": ["admin"],
     }
 
     user = USER
@@ -99,6 +99,8 @@ class Users(Resource):
         "DELETE": ["admin"],
     }
 
+    no_auth = True
+
     users = USERS
 
     def on_get(self, req, resp):
@@ -126,7 +128,7 @@ class Users(Resource):
         else:
             results = users
 
-        resp.media = results
+        resp.media = {"results": results, "config": self.app_config, "random": self.random}
 
     def on_post(self, req, resp):
         """
