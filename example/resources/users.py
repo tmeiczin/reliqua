@@ -101,7 +101,6 @@ class Users(Resource):
 
     no_auth = True
 
-
     users = USERS
 
     def on_get(self, req, resp):
