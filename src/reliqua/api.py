@@ -47,60 +47,46 @@ class Api(falcon.App):
 
     def __init__(
         self,
-        url=None,
-        swagger_url=None,
         resource_path=None,
         middleware=None,
         config=None,
-        version=None,
-        desc=None,
-        title=None,
-        license=None,
-        license_url=None,
-        contact_name=None,
-        openapi_highlight=True,
-        openapi_sort="alpha",
+        resource_attributes=None,
+        info=None,
+        openapi=None,
+        **_kwargs,
     ):
         """
         Create an API instance.
 
-        :param str url:                 API URL used by Swagger UI
-        :param str swagger_url:         URL to Swagger instance
-        :param str resource_path:       Path to the resource modules
-        :param list middleware:         Middleware
-        :param str version:             Application version
-        :param str desc:                Application description
-        :param str title:               Application title
-        :param dict config:             API configuration parameters
-        :param str license:             API license
-        :param str license_url:         API License URL
-        :param str contact_name:        API Contact name
-        :param bool openapi_highlight:  Enable OpenAPI syntax highlighting
-        :param str openapi_sort:        OpenAPI endpoint/tag sort order
+        :param str resource_path:             Path to the resource modules
+        :param list middleware:               Middleware
+        :param dict config:                   API configuration parameters
+        :param dict resource_attributes:      Parameters added as resource attributes
+        :param dict info:                     Application information
+        :param dict openapi:                  OpenAPI configuration options
 
-        :return:                   api instance
+        :return:                               api instance
         """
-        self.doc_endpoint = "/docs"
-        self.openapi_spec = "/openapi/openapi.json"
-        self.openapi_static = "/openapi/static"
-        self.desc = desc
-        self.title = title
-        self.version = version
+        info = info or {}
+        openapi = openapi or {}
+
+        openapi_path = openapi["path"]
+        self.url = openapi["api_url"]
+
+        self.openapi = openapi
+        self.info = info
+
+        self.openapi["spec"] = f"{openapi_path}/openapi.json"
+        self.openapi["static"] = f"{openapi_path}/static"
         self.resources = []
         self.auth = [x for x in middleware if isinstance(x, AuthMiddleware)]
         self.config = config or {}
-        self.license = license
-        self.license_url = license_url
-        self.contact_name = contact_name
-        self.openapi_highlight = openapi_highlight
-        self.openapi_sort = openapi_sort
+        self.resource_attributes = resource_attributes or {}
 
         path = os.path.dirname(sys.modules[__name__].__file__)
-        self.url = url
-        self.swagger_path = f"{path}/swagger"
-        self.openapi_server = swagger_url
-        self.openapi_spec_url = f"{self.url}{self.openapi_spec}"
-        self.openapi_static_url = f"{self.url}{self.openapi_static}"
+        self.openapi["file_path"] = f"{path}/swagger"
+        self.openapi["spec_url"] = f"{self.url}{self.openapi['spec']}"
+        self.openapi["static_url"] = f"{self.url}{self.openapi['static']}"
 
         middleware = middleware or []
         cors = CORS(allow_all_origins=True, allow_all_methods=True, allow_all_headers=True)
@@ -142,7 +128,8 @@ class Api(falcon.App):
             classes = self._get_classes(file)
             resources.extend(classes)
 
-        self.resources = [x() for x in resources]
+        # add config to resource
+        self.resources = [x(app_config=self.config, **self.resource_attributes) for x in resources]
 
     def _is_route_method(self, name, suffix):
         if not name.startswith("on_"):
@@ -194,21 +181,16 @@ class Api(falcon.App):
 
     def _add_docs(self):
         swagger = Swagger(
-            self.openapi_static_url, self.openapi_spec_url, sort=self.openapi_sort, highlight=self.openapi_highlight
+            self.openapi["static_url"],
+            self.openapi["spec_url"],
+            sort=self.openapi["sort"],
+            highlight=self.openapi["highlight"],
         )
-        openapi = OpenApi(
-            title=self.title,
-            description=self.desc,
-            version=self.version,
-            license=self.license,
-            license_url=self.license_url,
-            contact_name=self.contact_name,
-            auth=self.auth,
-        )
+        openapi = OpenApi(**self.info, auth=self.auth)
         openapi.process_resources(self.resources)
         schema = openapi.schema()
-        print(f"adding static route {self.doc_endpoint} {self.swagger_path}")
-        self.add_static_route(self.openapi_static, self.swagger_path)
-        self.add_route(self.doc_endpoint, swagger)
-        print(f"adding swagger file {self.openapi_spec}")
-        self.add_route(self.openapi_spec, Docs(schema))
+        print(f"adding static route {self.openapi['docs_endpoint']} {self.openapi['file_path']}")
+        self.add_static_route(self.openapi["static"], self.openapi["file_path"])
+        self.add_route(self.openapi["docs_endpoint"], swagger)
+        print(f"adding openapi file {self.openapi['spec']}")
+        self.add_route(self.openapi["spec"], Docs(schema))

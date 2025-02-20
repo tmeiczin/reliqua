@@ -11,6 +11,56 @@ from gunicorn.app.base import BaseApplication
 from .api import Api
 from .middleware import ProcessParams
 
+GUNICORN_DEFAULTS = {
+    "bind": "127.0.0.1:8000",  # Address and port to listen for requests [host:port]
+    "workers": 1,  # Number of worker processes
+    "loglevel": "critical",  # Log level (debug, error, info, critical)
+    "accesslog": "-",  # Access log path ("-" for stream, None to disable)
+    "errorlog": "-",  # Error log path ("-" for stream, None to disable)
+    "worker_class": "gthread",  # Type of worker processes
+    "timeout": 30,  # Inactive worker timeout (worker killed)
+    "keepalive": 2,  # Keep alive period for a request
+}
+
+OPENAPI_DEFAULTS = {
+    "api_url": None,  # API URL used by OpenAI UI (if different from bind, for example, behind a proxy)
+    "ui_url": None,  # OpenAPI UI index url
+    "highlight": True,  # Enable OpenAPI syntax highlighting
+    "sort": "alpha",  # OpenAPI endpoint/tag sort order
+    "path": "/openapi",  # OpenAPI endpoint path (JSON and static files)
+    "docs_endpoint": "/docs",  # Documentation endpoint
+}
+
+INFO_DEFAULTS = {
+    "title": "Application Title",  # Application title
+    "version": "1.0.0",  # Application version
+    "description": "",  # Application description
+    "license": "",  # License
+    "license_url": "",  # License URL
+    "contact_name": "",  # Contact name
+}
+
+
+def update_dict(a, b):
+    """
+    Update dictionary A with values from dictionary B.
+
+    Update the diction A with values from dictionary B. Remove
+    keys from A that are not in B.
+
+    :param dict a:    Dictionary A
+    :param dict b:    Dictionary B
+    """
+    # Create a new dictionary with keys from A that are also in B
+    updated_dict = {key: a[key] for key in a if key in b}
+
+    # Add keys from B that are not in A
+    for key in b:
+        if key not in updated_dict:
+            updated_dict[key] = b[key]
+
+    return updated_dict
+
 
 def load_config(config_file):
     """
@@ -39,100 +89,58 @@ class Application(BaseApplication):
 
     def __init__(
         self,
-        bind=None,
-        api_url=None,
-        swagger_url=None,
-        workers=None,
-        worker_class="sync",
-        threads=None,
         resource_path=None,
-        loglevel=None,
-        accesslog="-",
-        errorlog="-",
         middleware=None,
-        version=None,
-        desc=None,
-        title=None,
-        license=None,
-        license_url=None,
-        contact_name=None,
-        openapi_highlight=True,
-        openapi_sort="alpha",
+        config=None,
+        resource_attributes=None,
+        info=None,
+        openapi=None,
+        gunicorn=None,
+        **_kwargs,
     ):
         """
         Create Application instance.
 
-        :param str  bind:               Address and port to listen for requests [host:port]
-        :param str  api_url:            URL for API used by Swagger UI (if different from bind)
-        :param str  swagger_url:        URL to the Swagger UI
-        :param int  workers:            Number of worker processes
-        :param int  workers_class:      Type of worker processes
-        :param int  threads:            Number of threads per worker process
-        :param str  resource_path:      Path to the API resource modules
-        :param str  loglevel:           Log level (debug, error, info, critical)
-        :param str  accesslog:          Access log path ("-" for stream, None to disable)
-        :param str  errorlog:           Error log path ("-" for stream, None to disable)
-        :param list middleware:         Middleware
-        :param str  version:            Application version
-        :param str  desc:               Application description
-        :param str  title:              Application title
-        :param str license:             API license
-        :param str license_url:         API License URL
-        :param str contact_name:        API Contact name
-        :param bool openapi_highlight:  Enable OpenAPI syntax highlighting
-        :param str openapi_sort:        OpenAPI endpoint/tag sort order
+        :param str resource_path:         Path to the API resource modules
+        :param list middleware:           Middleware
+        :param dict config:               Application resource parameters (passed to resources as config attribute)
+        :param dict resource_attributes:  Parameters added as resource attributes
+        :param str info:                  Application information
+        :param str openapi:               OpenAPI configuration options
+        :param dict gunicorn:             Gunicorn configuration options
 
-        :return:                        Application instance
+        :return:                          Application instance
         """
         middleware = middleware or []
+        gunicorn = gunicorn or {}
+        openapi = openapi or {}
+        info = info or {}
 
-        options = {
-            "bind": "127.0.0.1:8000",
-            "workers": 5,
-            "api_url": None,
-            "resource_path": "resource",
-            "loglevel": "critical",
-        }
+        resource_path = resource_path or ""
+        resource_attributes = resource_attributes or {}
 
-        api_url = api_url or options["api_url"]
-        resource_path = resource_path or options["resource_path"]
-
-        self.gunicorn_options = {
-            "bind": bind or options["bind"],
-            "workers": workers or options["workers"],
-            "loglevel": loglevel or options["loglevel"],
-            "accesslog": accesslog,
-            "errorlog": errorlog,
-            "worker_class": worker_class,
-        }
-
-        # If a number of threads was specified, add that to the options.
-        if threads:
-            self.gunicorn_options["threads"] = threads
-            self.gunicorn_options["worker_class"] = "gthread"
+        self.gunicorn_options = update_dict(gunicorn, GUNICORN_DEFAULTS)
+        openapi = update_dict(openapi, OPENAPI_DEFAULTS)
+        info = update_dict(info, INFO_DEFAULTS)
 
         middleware.append(ProcessParams())
 
         # trim slashes from proxy URL if specified; otherwise set default proxy url
-        api_url = api_url.rstrip("/") if api_url else f"http://{bind}"
+        bind = self.gunicorn_options["bind"]
+        openapi["api_url"] = openapi["api_url"].rstrip("/") if openapi["api_url"] else f"http://{bind}"
+
         self.application = Api(
-            url=api_url,
-            swagger_url=swagger_url,
             resource_path=resource_path,
             middleware=middleware,
-            version=version,
-            desc=desc,
-            title=title,
-            license=license,
-            license_url=license_url,
-            contact_name=contact_name,
-            openapi_highlight=openapi_highlight,
-            openapi_sort=openapi_sort,
+            config=config,
+            resource_attributes=resource_attributes,
+            openapi=openapi,
+            info=info,
         )
 
         super().__init__()
 
-    def init(self, parser, opts, args):
+    def init(self, _parser, _opts, _args):
         """
         Init method.
 

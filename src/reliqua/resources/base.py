@@ -13,6 +13,17 @@ class Resource:
     the application finds and adds routes.
     """
 
+    def __init__(self, **kwargs):
+        """
+        Create Resource instance.
+
+        Create the API resource instance.
+
+        :param dict config:      Application configuration
+        :return:                 None
+        """
+        self.__dict__.update(kwargs)
+
     @property
     def name(self):
         """Return class name."""
