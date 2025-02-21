@@ -28,7 +28,6 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
-    "Topic :: Framework :: Reliqua",
     "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
