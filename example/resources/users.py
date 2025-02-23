@@ -64,7 +64,7 @@ class User(Resource):
         """
         try:
             resp.media = users[int(id)]
-        except IndexError:
+        except (IndexError, ValueError):
             resp.status = HTTP("404")
 
     def on_delete_by_id(self, _req, resp, id=None):
@@ -78,7 +78,7 @@ class User(Resource):
         try:
             users.pop(int(id))
             resp.media = {"success": True}
-        except IndexError:
+        except (IndexError, ValueError):
             resp.status = HTTP("400")
 
 
