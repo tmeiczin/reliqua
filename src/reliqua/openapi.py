@@ -115,7 +115,7 @@ class Parameter:
         self.examples = examples
         self._datatype = datatype
 
-        # path parameters are always required
+        # Path parameters are always required
         if self.location == "path":
             self.required = True
 
@@ -125,7 +125,7 @@ class Parameter:
         value = self._datatype
         a, _, b = value.partition("|")
 
-        # handle defined list type ex: list[str]
+        # Handle defined list type ex: list[str]
         if re.search(r"list\[(\w+)]", a):
             a = "list"
 

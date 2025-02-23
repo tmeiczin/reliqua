@@ -65,7 +65,7 @@ class Api(falcon.App):
         :param dict info:                     Application information
         :param dict openapi:                  OpenAPI configuration options
 
-        :return:                               api instance
+        :return:                               API instance
         """
         info = info or {}
         openapi = openapi or {}
@@ -107,6 +107,7 @@ class Api(falcon.App):
         self._add_docs()
 
     def _add_handlers(self):
+        """Add custom media handlers."""
         extra_handlers = {
             "application/yaml": YAMLHandler(),
             "text/html; charset=utf-8": TextHandler(),
@@ -118,6 +119,7 @@ class Api(falcon.App):
         self.resp_options.media_handlers.update(extra_handlers)
 
     def _load_resources(self):
+        """Load resource classes from the specified resource path."""
         resources = []
         path = f"{self.resource_path}/*.py"
         print(f"searching {path}")
@@ -128,10 +130,11 @@ class Api(falcon.App):
             classes = self._get_classes(file)
             resources.extend(classes)
 
-        # add config to resource
+        # Add config to resource
         self.resources = [x(app_config=self.config, **self.resource_attributes) for x in resources]
 
     def _is_route_method(self, name, suffix):
+        """Check if a method name is a route method."""
         if not name.startswith("on_"):
             return None
 
@@ -141,6 +144,7 @@ class Api(falcon.App):
         return re.search(r"^on_([a-z]+)$", name)
 
     def _parse_methods(self, resource, route, methods):
+        """Parse methods of a resource for a given route."""
         parser = SphinxParser()
         for name in methods:
             operation_id = f"{resource.__class__.__name__}.{name}"
@@ -149,6 +153,7 @@ class Api(falcon.App):
             resource.__data__[route][action] = parser.parse(method, operation_id=operation_id)
 
     def _parse_resource(self, resource):
+        """Parse a resource to extract routes and methods."""
         for route, data in resource.__routes__.items():
             resource.__data__[route] = {}
             suffix = data.get("suffix", None)
@@ -156,16 +161,22 @@ class Api(falcon.App):
             self._parse_methods(resource, route, methods)
 
     def _parse_docstrings(self):
+        """Parse docstrings of all resources."""
         for resource in self.resources:
             resource.__data__ = {}
             self._parse_resource(resource)
 
     def _get_classes(self, filename):
+        """Get resource classes from a file."""
         classes = []
         module_name = str(uuid.uuid3(uuid.NAMESPACE_OID, filename))
         spec = importlib.util.spec_from_file_location(module_name, filename)
         module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        try:
+            spec.loader.exec_module(module)
+        except Exception as e:
+            print(f"Error loading module {module_name}: {e}")
+            return classes
 
         for _, c in inspect.getmembers(module, inspect.isclass):
             if issubclass(c, Resource) and hasattr(c, "__routes__"):
@@ -174,12 +185,14 @@ class Api(falcon.App):
         return classes
 
     def _add_routes(self):
+        """Add routes for all resources."""
         for resource in self.resources:
             routes = resource.__routes__
             for route, kwargs in routes.items():
                 self.add_route(route, resource, **kwargs)
 
     def _add_docs(self):
+        """Add Swagger and OpenAPI documentation routes."""
         swagger = Swagger(
             self.openapi["static_url"],
             self.openapi["spec_url"],
