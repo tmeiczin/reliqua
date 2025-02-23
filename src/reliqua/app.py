@@ -43,18 +43,19 @@ INFO_DEFAULTS = {
 
 def update_dict(a, b):
     """
-    Update dictionary A with values from dictionary B.
+    Update dictionary a with values from dictionary b.
 
-    Update the diction A with values from dictionary B. Remove
-    keys from A that are not in B.
+    Update dictionary a with values from dictionary b. Remove
+    keys from a that are not in b.
 
-    :param dict a:    Dictionary A
-    :param dict b:    Dictionary B
+    :param dict a:  Dictionary to update
+    :param dict b:  Dictionary with new values
+    :return dict:   Updated dictionary
     """
-    # Create a new dictionary with keys from A that are also in B
+    # Create a new dictionary with keys from a that are also in b
     updated_dict = {key: a[key] for key in a if key in b}
 
-    # Add keys from B that are not in A
+    # Add keys from b that are not in a
     for key in b:
         if key not in updated_dict:
             updated_dict[key] = b[key]
@@ -78,8 +79,9 @@ def load_config(config_file):
 
         for option in config.options(section):
             params[option] = config.get(section, option)
-    except TypeError:
-        pass
+    except (TypeError, configparser.Error) as e:
+        # Log the error or handle it appropriately
+        print(f"Error loading config file: {e}")
 
     return params
 
@@ -125,7 +127,7 @@ class Application(BaseApplication):
 
         middleware.append(ProcessParams())
 
-        # trim slashes from proxy URL if specified; otherwise set default proxy url
+        # Trim slashes from proxy URL if specified; otherwise set default proxy URL
         bind = self.gunicorn_options["bind"]
         openapi["api_url"] = openapi["api_url"].rstrip("/") if openapi["api_url"] else f"http://{bind}"
 
