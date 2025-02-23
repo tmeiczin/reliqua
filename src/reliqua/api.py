@@ -174,7 +174,7 @@ class Api(falcon.App):
         module = importlib.util.module_from_spec(spec)
         try:
             spec.loader.exec_module(module)
-        except Exception as e:
+        except (ImportError, FileNotFoundError, SyntaxError, TypeError, AttributeError) as e:
             print(f"Error loading module {module_name}: {e}")
             return classes
 
