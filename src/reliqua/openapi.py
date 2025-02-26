@@ -47,6 +47,7 @@ TYPE_MAP = {
     "dict": "object",
 }
 
+
 DEFAULT_RESPONSE = {
     "type": "object",
     "properties": {
@@ -58,6 +59,10 @@ DEFAULT_RESPONSE = {
         },
     },
 }
+
+
+BINARY_RESPONSE = {"type": "string", "format": "binary"}
+
 
 verbs = ["get", "patch", "put", "post", "delete"]
 
@@ -591,6 +596,7 @@ class OpenApi:
         contact_email="",
         auth=None,
         parser=None,
+        servers=None,
     ):
         """
         Create an OpenAPI class.
@@ -609,6 +615,7 @@ class OpenApi:
         :param str contact_url:    Software URL
         :param str contact_email:  Contact email
         :param Parser parser:      The docstring parser
+        :param list servers:       List of servers
         :return:
         """
         self.openapi = "3.1.0"
@@ -618,6 +625,7 @@ class OpenApi:
         self.summary = summary or ""
         self.terms = terms or ""
         self.auth = auth or []
+        self.servers = servers or []
 
         contact = Contact(name=contact_name, email=contact_email, url=contact_url)
         license = License(name=license, url=license_url)
@@ -633,6 +641,7 @@ class OpenApi:
         self.paths = {}
         self.component_schemas = {
             "default_response": DEFAULT_RESPONSE,
+            "binary": BINARY_RESPONSE,
         }
         self.parser = parser
 
@@ -682,4 +691,5 @@ class OpenApi:
             "paths": self.paths,
             "components": self.components,
             "security": self.security_names,
+            "servers": self.servers,
         }

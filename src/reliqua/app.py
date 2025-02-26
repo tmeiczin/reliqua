@@ -23,12 +23,12 @@ GUNICORN_DEFAULTS = {
 }
 
 OPENAPI_DEFAULTS = {
-    "api_url": None,  # API URL used by OpenAI UI (if different from bind, for example, behind a proxy)
-    "ui_url": None,  # OpenAPI UI index url
+    "ui_url": None,  # Swagger UI index URL (if different from bind, for example, behind a proxy))
     "highlight": True,  # Enable OpenAPI syntax highlighting
     "sort": "alpha",  # OpenAPI endpoint/tag sort order
     "path": "/openapi",  # OpenAPI endpoint path (JSON and static files)
-    "docs_endpoint": "/docs",  # Documentation endpoint
+    "docs": "/docs",  # Documentation endpoint
+    "servers": [],  # List of target API servers (default is bind address)
 }
 
 INFO_DEFAULTS = {
@@ -129,7 +129,11 @@ class Application(BaseApplication):
 
         # Trim slashes from proxy URL if specified; otherwise set default proxy URL
         bind = self.gunicorn_options["bind"]
-        openapi["api_url"] = openapi["api_url"].rstrip("/") if openapi["api_url"] else f"http://{bind}"
+        openapi["ui_url"] = openapi["ui_url"].rstrip("/") if openapi["ui_url"] else f"http://{bind}"
+
+        # Add default api server if none specified
+        if len(openapi["servers"]) == 0:
+            openapi["servers"] = [{"url": f"http://{bind}", "description": "Default server"}]
 
         self.application = Api(
             resource_path=resource_path,

@@ -71,7 +71,8 @@ class Api(falcon.App):
         openapi = openapi or {}
 
         openapi_path = openapi["path"]
-        self.url = openapi["api_url"]
+        self.url = openapi["ui_url"]
+        self.servers = openapi["servers"]
 
         self.openapi = openapi
         self.info = info
@@ -199,11 +200,11 @@ class Api(falcon.App):
             sort=self.openapi["sort"],
             highlight=self.openapi["highlight"],
         )
-        openapi = OpenApi(**self.info, auth=self.auth)
+        openapi = OpenApi(**self.info, auth=self.auth, servers=self.servers)
         openapi.process_resources(self.resources)
         schema = openapi.schema()
-        print(f"adding static route {self.openapi['docs_endpoint']} {self.openapi['file_path']}")
+        print(f"adding static route {self.openapi['docs']} {self.openapi['file_path']}")
         self.add_static_route(self.openapi["static"], self.openapi["file_path"])
-        self.add_route(self.openapi["docs_endpoint"], swagger)
+        self.add_route(self.openapi["docs"], swagger)
         print(f"adding openapi file {self.openapi['spec']}")
         self.add_route(self.openapi["spec"], Docs(schema))
