@@ -38,7 +38,6 @@ def main():
     """Execute main method."""
     bind_address = "127.0.0.01"
     bind_port = 8000
-    api_url = None
     workers = 2
     parser = argparse.ArgumentParser()
     resource_path = os.path.abspath(os.path.dirname(sys.modules[__name__].__file__)) + "/resources"
@@ -49,7 +48,9 @@ def main():
         default=bind_address,
     )
     parser.add_argument("--port", help="Bind port to listen for requests", default=bind_port)
-    parser.add_argument("--api-url", help="API URL", default=api_url)
+    parser.add_argument("--ui-url", help="OpenAPI UI URL (ie Swagger index) default is address:port")
+    parser.add_argument("--docs", help="Docs", default="/docs")
+    parser.add_argument("--server", help="Additional server(s) usable in the API docs", nargs="*", action="append")
     parser.add_argument("--resource-path", help="Path to API resource modules", default=resource_path)
     parser.add_argument("--workers", help="Number of worker threads", default=workers)
     parser.add_argument("--config", help="Configuration file", default=None)
@@ -65,6 +66,8 @@ def main():
     auth = AuthMiddleware([basic_auth, cookie_auth], control=AccessResource(default_mode="deny"))
 
     args = parser.parse_args()
+
+    servers = [{"url": x, "description": ""} for x in args.server] if args.server else []
     middleware = [auth]
     if args.config:
         config = load_config(args.config)
@@ -91,11 +94,12 @@ def main():
     openapi = {
         "highlight": True,
         "sort": "alpha",
+        "ui_url": args.ui_url,
+        "servers": servers,
     }
 
     app = Application(
         resource_path=args.resource_path,
-        api_url=args.api_url,
         loglevel="info",
         accesslog=None,
         middleware=middleware,
