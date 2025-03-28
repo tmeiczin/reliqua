@@ -133,7 +133,7 @@ class Application(BaseApplication):
 
         # Add default api server if none specified
         if len(openapi["servers"]) == 0:
-            openapi["servers"] = [{"url": f"http://{bind}", "description": "Default server"}]
+            openapi["servers"] = [{"url": openapi["ui_url"], "description": "Default server"}]
 
         self.application = Api(
             resource_path=resource_path,
