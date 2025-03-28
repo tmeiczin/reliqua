@@ -4,8 +4,8 @@ Reliqua Framework.
 Copyright 2016-2024.
 """
 
+from reliqua.exceptions import HTTPNotFound
 from reliqua.resources.base import Resource
-from reliqua.status_codes import HTTP
 
 servers = [
     "romeo",
@@ -40,7 +40,7 @@ class Server(Resource):
         try:
             resp.media = servers[int(id)]
         except (IndexError, ValueError):
-            resp.status = HTTP("404")
+            raise HTTPNotFound("Invalid ID")
 
 
 class Servers(Resource):
@@ -84,4 +84,4 @@ class Servers(Resource):
         try:
             resp.media = servers[int(cpus)]
         except (IndexError, ValueError):
-            resp.status = HTTP("404")
+            raise HTTPNotFound("Invalid ID")

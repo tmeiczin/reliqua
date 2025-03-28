@@ -23,7 +23,7 @@ class User(Resource):
 
         :param str id:       [in=path, required] User ID
         :param str email:    [in=query] User Email
-        :param str phone:    [in=query, enum] Phone Numbers
+        :param str phone:    [in=query enum] Phone Numbers
 
         :response 200:
         :response 400:
@@ -63,7 +63,7 @@ from reliqua.app import Application
     
 app = Application(
     bind='0.0.0.0:8000',
-    proxy_api_url = 'http://example.com/api',
+    ui_url = 'http://example.com/api',
     workers=1,
     resource_path='/var/www/html/resources'
 )
@@ -74,7 +74,7 @@ app.run()
 Where:
 
 bind:           Address and port to listen for requests. [host:port]
-proxy_api_url:  The URL to the API when being used with a proxy, like nginx. If not supplied,
+ui_url:         The URL to the API when being used with a proxy, like nginx. If not supplied,
                 then the bind address is used.
 workers:        Number of worker threads to start.
 resource_path:  This is where your python resource files are located.

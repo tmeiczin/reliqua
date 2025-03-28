@@ -255,7 +255,7 @@ class Response:
         """Return dict of data."""
         content_types = [CONTENT_MAP.get(x) for x in self.content]
         schema = {"schema": {"$ref": f"#/components/schemas/{self.schema}"}}
-        content = {x: schema for x in content_types}
+        content = dict.fromkeys(content_types, schema)
 
         return {
             "description": self.description,
@@ -346,7 +346,7 @@ class Operation:
         accepts = [CONTENT_MAP.get(x) for x in self.accepts]
         required = [k for k, v in self.request_body_parameters.items() if v.get("required") is True]
         schema = {"schema": {"type": "object", "required": required, "properties": self.request_body_parameters}}
-        content = {x: schema for x in accepts}
+        content = dict.fromkeys(accepts, schema)
 
         return {
             "description": self.description,

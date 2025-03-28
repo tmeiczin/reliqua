@@ -4,8 +4,8 @@ Reliqua Framework.
 Copyright 2016-2024.
 """
 
+from reliqua.exceptions import HTTPBadRequest
 from reliqua.resources.base import Resource
-from reliqua.status_codes import HTTP
 
 
 class Contact(Resource):
@@ -36,5 +36,4 @@ class Contact(Resource):
         if p.get("subject"):
             resp.media = {"success": True}
         else:
-            resp.status = HTTP("400")
-            resp.media = {"error": "Subject is required"}
+            raise HTTPBadRequest
