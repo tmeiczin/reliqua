@@ -13,7 +13,13 @@ def index(spec, server, sort="alpha", highlight="true"):
     """
     Return the Swagger index HTML.
 
-    This returns the Swagger index html contents.
+    This returns the Swagger index HTML contents.
+
+    :param str spec:       URL to the OpenAPI spec
+    :param str server:     URL to the server hosting Swagger UI assets
+    :param str sort:       Sort order for operations and tags
+    :param str highlight:  Enable syntax highlighting
+    :return str:           HTML content for Swagger UI
     """
     highlight = "true" if highlight else "false"
 
@@ -60,7 +66,7 @@ def index(spec, server, sort="alpha", highlight="true"):
 
 
 class Swagger(Resource):
-    """Class to server the static swagger files."""
+    """Class to serve the static Swagger files."""
 
     no_auth = True
 
@@ -70,11 +76,10 @@ class Swagger(Resource):
 
         :param str url:            URL to Swagger instance
         :param str openapi_url:    URL to OpenAPI spec
-        :param srt sort:           Tag/Endpoint sort order
+        :param str sort:           Tag/Endpoint sort order
         :param bool highlight:     Syntax highlighting
-        :param bool authenticate:  Docs need authentication
-        :return:                   None
         """
+        super().__init__()
         self.url = url
         self.openapi_url = openapi_url
         self.highlight = highlight
@@ -82,12 +87,10 @@ class Swagger(Resource):
 
     def on_get(self, _req, resp):
         """
-        Return the static swagger file.
+        Return the static Swagger file.
 
-        :param Request request:     Request object
-        :param Response response:   Response object
-        :param str filename:        Filename contents to return
-        :return text:               File contents
+        :param Request _req:       Request object
+        :param Response resp:      Response object
         """
         resp.status = HTTP(200)
         resp.content_type = "text/html"

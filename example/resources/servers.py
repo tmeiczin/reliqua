@@ -4,8 +4,8 @@ Reliqua Framework.
 Copyright 2016-2024.
 """
 
+from reliqua.exceptions import HTTPNotFound
 from reliqua.resources.base import Resource
-from reliqua.status_codes import HTTP
 
 servers = [
     "romeo",
@@ -26,21 +26,21 @@ class Server(Resource):
 
     def on_get_by_id(self, _req, resp, id=None):
         """
-        Retrieve servers.
+        Retrieve a server.
 
-        Retrieve a list of servers in the lab.
+        Retrieve a server by its ID.
 
         :param str id:       [in=path, required] Server ID
 
-        :response 200:       server was retrieved
-        :response 400:       invalid query parameter
+        :response 200:       Server was retrieved
+        :response 404:       Server not found
 
         :return json:
         """
         try:
-            resp.media = servers[id]
-        except IndexError:
-            resp.status = HTTP("404")
+            resp.media = servers[int(id)]
+        except (IndexError, ValueError):
+            raise HTTPNotFound("Invalid ID")
 
 
 class Servers(Resource):
@@ -54,14 +54,14 @@ class Servers(Resource):
 
     def on_get(self, req, resp):
         """
-        Retrieve a server.
+        Retrieve servers.
 
-        Retrieve server information
+        Retrieve a list of servers in the lab.
 
         :param list labs:     [in=query] The labs servers are located
 
-        :response 200:       server  was retrieved
-        :response 400:       invalid query parameter
+        :response 200:        Servers were retrieved
+        :response 400:        Invalid query parameter
 
         :return json:
         """
@@ -70,18 +70,18 @@ class Servers(Resource):
 
     def on_get_by_cpu(self, _req, resp, cpus=1):
         """
-        Retrieve a server by cpu.
+        Retrieve a server by CPU.
 
-        Retrieve server information by cpu
+        Retrieve server information by CPU.
 
         :param int cpus:     [in=path required] Number of CPUs for server
 
-        :response 200:       server  was retrieved
-        :response 400:       invalid query parameter
+        :response 200:       Server was retrieved
+        :response 404:       Server not found
 
         :return json:
         """
         try:
-            resp.media = servers[cpus]
-        except IndexError:
-            resp.status = HTTP("404")
+            resp.media = servers[int(cpus)]
+        except (IndexError, ValueError):
+            raise HTTPNotFound("Invalid ID")

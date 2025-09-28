@@ -58,14 +58,16 @@ class Docs(Resource):
         :param dict schema:    Documents JSON schema
         :return:               None
         """
+        super().__init__()
         self.schema = schema
 
     def on_get(self, _req, resp):
         """
         Return the JSON document schema.
 
-        :param Response response:    Response object
-        :return:                     None
+        :param Request _req:       Request object
+        :param Response resp:      Response object
+        :return:                   None
         """
         resp.set_header("Access-Control-Allow-Origin", "*")
         resp.media = self.schema

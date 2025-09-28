@@ -4,6 +4,7 @@ Reliqua Framework.
 Copyright 2016-2024.
 """
 
+from reliqua.exceptions import HTTPBadRequest
 from reliqua.resources.base import Resource
 
 
@@ -34,3 +35,5 @@ class Contact(Resource):
         p = req.params
         if p.get("subject"):
             resp.media = {"success": True}
+        else:
+            raise HTTPBadRequest

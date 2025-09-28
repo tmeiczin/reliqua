@@ -16,13 +16,13 @@ class Gzip(Resource):
         "/gzip": {},
     }
 
-    def on_get(self, req, resp):
+    def on_get(self, _req, resp):
         """
         Send contact message.
 
         :accepts json:          Accepts JSON
-        :response 200 binary:       All good
-        :return gzip:      Return data
+        :response 200 binary:   All good
+        :return gzip:           Return data
         """
         fh = open("/tmp/hello.txt.gz", "rb")
         resp.append_header("Content-Disposition", "attachment; filename=hello.txt.gz")
@@ -38,12 +38,12 @@ class Binary(Resource):
         "/bin/{filename}": {},
     }
 
-    def on_get(self, req, resp, filename):
+    def on_get(self, _req, resp, filename):
         """
         Send contact message.
 
         :param str filename:    [in=path] Filename
-        :response 200 binary:       All good
+        :response 200 binary:   All good
         :return binary:         Return data
         """
         path = f"/tmp/{filename}"

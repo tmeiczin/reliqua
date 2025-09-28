@@ -4,8 +4,8 @@ Reliqua Framework.
 Copyright 2016-2024.
 """
 
+from reliqua.exceptions import HTTPNotFound
 from reliqua.resources.base import Resource
-from reliqua.status_codes import HTTP
 
 users = [
     {
@@ -46,7 +46,7 @@ class User(Resource):
     ]
 
     __auth__ = {
-        "get": ["admin"],
+        "put": ["admin"],
     }
 
     user = USER
@@ -64,8 +64,8 @@ class User(Resource):
         """
         try:
             resp.media = users[int(id)]
-        except IndexError:
-            resp.status = HTTP("404")
+        except IndexError as exc:
+            raise HTTPNotFound("User not found", description="Please provide a valid user ID.") from exc
 
     def on_delete_by_id(self, _req, resp, id=None):
         """
@@ -78,8 +78,8 @@ class User(Resource):
         try:
             users.pop(int(id))
             resp.media = {"success": True}
-        except IndexError:
-            resp.status = HTTP("400")
+        except IndexError as exc:
+            raise HTTPNotFound("User not found", description="Please provide a valid user ID.") from exc
 
 
 class Users(Resource):
@@ -98,6 +98,8 @@ class Users(Resource):
         "POST": ["admin"],
         "DELETE": ["admin"],
     }
+
+    no_auth = True
 
     users = USERS
 
@@ -126,7 +128,7 @@ class Users(Resource):
         else:
             results = users
 
-        resp.media = results
+        resp.media = {"results": results, "config": self.app_config, "random": self.random}
 
     def on_post(self, req, resp):
         """
