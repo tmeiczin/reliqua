@@ -136,6 +136,7 @@ class Users(Resource):
 
         :param str username:      [in=body required=true]  Username
         :param str email:         [in=body required=true]  Email
+        :param list[dict] data:   [in=body] Extra Data
         :param object config:     [in=body] Configuration data
 
         :accepts [json xml]:      The body content type

@@ -21,6 +21,7 @@ TRANSFORMS = {
     "object": json.loads,
     "list": list,
     "array": list,
+    "dict": dict,
 }
 
 
