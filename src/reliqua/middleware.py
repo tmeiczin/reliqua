@@ -174,7 +174,11 @@ class Converter:
         :return:                     None
         """
         # pre-check if already type converted and skip if needed
-        value = req.get_param(parameter.name, required=parameter.required)
+        try:
+            value = req.get_param(parameter.name, required=parameter.required)
+        except IndexError:
+            value = []
+
         if isinstance(value, python_type(parameter.datatype)):
             return value
 
