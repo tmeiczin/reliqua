@@ -146,5 +146,4 @@ class Users(Resource):
         """
         p = req.params
         users.append(p)
-        names = p.get("names")
         resp.media = len(users) - 1
