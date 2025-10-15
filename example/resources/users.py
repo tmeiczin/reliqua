@@ -138,6 +138,7 @@ class Users(Resource):
         :param str email:         [in=body required=true]  Email
         :param list[dict] data:   [in=body] Extra Data
         :param list[str] names:   [in=body] Names
+        :param bool valid:        [in=body default=False] Valid
         :param object config:     [in=body] Configuration data
 
         :accepts [json xml]:      The body content type
@@ -146,5 +147,4 @@ class Users(Resource):
         p = req.params
         users.append(p)
         names = p.get("names")
-        print(names)
         resp.media = len(users) - 1

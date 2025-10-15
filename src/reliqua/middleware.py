@@ -173,6 +173,7 @@ class Converter:
         :param str transform:        Transform method name
         :return:                     None
         """
+        transform = transform or parameter.datatype
         # pre-check if already type converted and skip if needed
         try:
             value = req.get_param(parameter.name, required=parameter.required)
