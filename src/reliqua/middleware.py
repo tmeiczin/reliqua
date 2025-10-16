@@ -9,6 +9,30 @@ import re
 
 import falcon
 
+
+def to_bool(value):
+    """
+    Convert value to bool.
+
+    This method will do a more extensive conversion to a python bool.
+
+    :param any value:    The value to be converted
+    :return bool:        Boolean value
+    """
+    truthy = {"true", "yes", "1", "on", "t", "y"}
+    falsy = {"false", "no", "0", "off", "f", "n", ""}
+
+    val = str(value).strip().lower()
+
+    if val in truthy:
+        return True
+
+    if val in falsy:
+        return False
+
+    return bool(value)
+
+
 TRANSFORMS = {
     "string": str,
     "str": str,
@@ -16,8 +40,8 @@ TRANSFORMS = {
     "float": float,
     "integer": int,
     "int": int,
-    "boolean": bool,
-    "bool": bool,
+    "boolean": to_bool,
+    "bool": to_bool,
     "object": json.loads,
     "list": list,
     "array": list,
@@ -185,6 +209,7 @@ class Converter:
 
         converter = getattr(Converter, f"as_{parameter.datatype}", Converter.as_str)
         transform = TRANSFORMS.get(transform, str)
+        print(f"transform: {transform}")
         default = transform(parameter.default) if transform and parameter.default else None
 
         return converter(
