@@ -5,8 +5,10 @@ from reliqua.sphinx_parser import SphinxParser
 
 def make_method(docstring):
     """Create a function with the given docstring for testing."""
+
     def on_get(self, _req, _resp):
         pass
+
     on_get.__doc__ = docstring
     on_get.__qualname__ = "TestResource.on_get"
     return on_get
@@ -101,10 +103,7 @@ class TestSphinxParserProperties:
     def test_parameters_parsed(self):
         parser = SphinxParser()
         parser.doc = (
-            "Get users.\n\n"
-            ":param str username: [in=query] Username\n"
-            ":param int limit: [in=query] Limit\n"
-            ":return json:"
+            "Get users.\n\n:param str username: [in=query] Username\n:param int limit: [in=query] Limit\n:return json:"
         )
         params = parser.parameters
         assert len(params) == 2
@@ -113,12 +112,7 @@ class TestSphinxParserProperties:
 
     def test_responses_parsed(self):
         parser = SphinxParser()
-        parser.doc = (
-            "Get users.\n\n"
-            ":response 200: Success\n"
-            ":response 400: Bad request\n"
-            ":return json:"
-        )
+        parser.doc = "Get users.\n\n:response 200: Success\n:response 400: Bad request\n:return json:"
         responses = parser.responses
         assert len(responses) == 2
         assert responses[0]["code"] == "200"
@@ -179,8 +173,10 @@ class TestSphinxParserParse:
         parser = SphinxParser()
 
         for verb in ["get", "post", "put", "patch", "delete"]:
+
             def method(self):
                 """Test."""
+
             method.__qualname__ = f"Res.on_{verb}"
             method.__doc__ = "Test.\n\n:return json:"
             result = parser.parse(method)
@@ -191,6 +187,7 @@ class TestSphinxParserParse:
 
         def method(self):
             r"""Test.\n\n:return json:"""
+
         method.__qualname__ = "Res.on_get_by_id"
         method.__doc__ = "Test.\n\n:return json:"
 
@@ -213,12 +210,7 @@ class TestSphinxParserEdgeCases:
 
     def test_multiline_parameter_description(self):
         parser = SphinxParser()
-        parser.doc = (
-            "Get data.\n\n"
-            ":param str name: [in=query] The user's\n"
-            "    full name\n"
-            ":return json:"
-        )
+        parser.doc = "Get data.\n\n:param str name: [in=query] The user's\n    full name\n:return json:"
         params = parser.parameters
         assert len(params) == 1
         assert "name" in params[0]["description"].lower() or params[0]["name"] == "name"
