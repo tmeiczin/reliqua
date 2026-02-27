@@ -143,6 +143,9 @@ class Application(BaseApplication):
             cors_options=cors_options,
         )
 
+        logger = logging.getLogger(__name__)
+        logger.info("listening on %s", bind)
+
         super().__init__()
 
     def init(self, _parser, _opts, _args):
