@@ -41,8 +41,8 @@ class TestAuthenticationContext:
 
     def test_kwargs_set_attributes(self):
         ctx = AuthenticationContext(user="alice", role="admin")
-        assert ctx.user == "alice"
-        assert ctx.role == "admin"
+        assert getattr(ctx, "user", None) == "alice"
+        assert getattr(ctx, "role", None) == "admin"
 
 
 class TestAccessList:

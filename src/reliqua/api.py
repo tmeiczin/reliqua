@@ -98,7 +98,6 @@ class Api(falcon.App):
         if not resource_path:
             resource_path = path + "/resources"
 
-        self.req_options.auto_parse_form_urlencoded = True
         self.resource_path = resource_path
 
         self._add_handlers()
@@ -116,8 +115,8 @@ class Api(falcon.App):
             "application/json": JSONHandler(),
         }
 
-        self.req_options.media_handlers.update(extra_handlers)
-        self.resp_options.media_handlers.update(extra_handlers)
+        self.req_options.media_handlers.update(extra_handlers)  # pyright: ignore[reportAttributeAccessIssue]
+        self.resp_options.media_handlers.update(extra_handlers)  # pyright: ignore[reportAttributeAccessIssue]
 
     def _load_resources(self):
         """Load resource classes from the specified resource path."""
