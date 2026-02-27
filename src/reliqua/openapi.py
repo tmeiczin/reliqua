@@ -245,7 +245,7 @@ class Response:
         self.code = code
         self.description = description
         self.content = content
-        self.schema = schema if schema else "default_response"
+        self.schema = schema or "default_response"
 
     def __repr__(self):
         """Return a printable representational string."""

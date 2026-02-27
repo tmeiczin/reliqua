@@ -299,9 +299,7 @@ class AccessResource(AccessControl):
         # or raise an exception
         if not roles:
             if self.raise_on_undefined:
-                raise falcon.HTTPNotImplemented(
-                    description=f"no roles are defined for {resource.name} {method}"
-                )
+                raise falcon.HTTPNotImplemented(description=f"no roles are defined for {resource.name} {method}")
 
             return True
 
