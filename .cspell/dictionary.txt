@@ -1,10 +1,12 @@
 accesslog
 camelcase
 cpus
+creds
 docstrings
 errmsg
 gthread
 gunicorn
+héllo
 isort
 keepalive
 Meiczinger
@@ -19,3 +21,4 @@ setuptools
 tesserocr
 tryceratops
 venv
+wörld

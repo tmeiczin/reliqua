@@ -24,11 +24,11 @@ class Gzip(Resource):
         :response 200 binary:   All good
         :return gzip:           Return data
         """
-        fh = open("/tmp/hello.txt.gz", "rb")
-        resp.append_header("Content-Disposition", "attachment; filename=hello.txt.gz")
-        resp.content_type = "application/gzip"
-        resp.content_encoding = "gzip"
-        resp.data = fh.read()
+        with open("/tmp/hello.txt.gz", "rb") as fh:
+            resp.append_header("Content-Disposition", "attachment; filename=hello.txt.gz")
+            resp.content_type = "application/gzip"
+            resp.content_encoding = "gzip"
+            resp.data = fh.read()
 
 
 class Binary(Resource):
