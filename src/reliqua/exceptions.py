@@ -55,7 +55,7 @@ def _make_exception_class(code, message):
     """Dynamically create an HTTPError subclass for the given status code."""
     status_string = f"{code} {message}"
 
-    def __init__(self, title=None, description=None, headers=None):
+    def _init(self, title=None, description=None, headers=None):
         """Initialize."""
         super(self.__class__, self).__init__(
             status=status_string,
@@ -67,7 +67,7 @@ def _make_exception_class(code, message):
     return type(
         _make_class_name(message),
         (HTTPError,),
-        {"__doc__": f"{message}.", "__init__": __init__},
+        {"__doc__": f"{message}.", "__init__": _init},
     )
 
 
@@ -78,4 +78,4 @@ for _code, _message in _ERROR_CODES.items():
     _cls_name = _make_class_name(_message)
     _cls = _make_exception_class(_code, _message)
     globals()[_cls_name] = _cls
-    __all__.append(_cls_name)
+    __all__ += [_cls_name]  # noqa: PLE0604
