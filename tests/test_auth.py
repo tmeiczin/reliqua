@@ -41,8 +41,8 @@ class TestAuthenticationContext:
 
     def test_kwargs_set_attributes(self):
         ctx = AuthenticationContext(user="alice", role="admin")
-        assert ctx.user == "alice"
-        assert ctx.role == "admin"
+        assert getattr(ctx, "user", None) == "alice"
+        assert getattr(ctx, "role", None) == "admin"
 
 
 class TestAccessList:
@@ -84,10 +84,10 @@ class TestAccessList:
         ac = AccessList(routes=["/public"], methods=[], default_mode="deny")
         assert ac.authentication_required("/secret", "GET", None) is True
 
-    def test_authorized_not_implemented(self):
+    def test_authorized_always_true(self):
+        """AccessList grants access to any authenticated request."""
         ac = AccessList()
-        with pytest.raises(NotImplementedError):
-            ac.authorized(None, None, None, None)
+        assert ac.authorized(None, None, None, None) is True
 
 
 class TestAccessCallback:

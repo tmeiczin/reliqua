@@ -16,6 +16,15 @@ from peewee import (
     SqliteDatabase,
 )
 
+__all__ = [
+    "BaseModel",
+    "DatabaseConnection",
+    "db",
+    "mysql_connect",
+    "psql_connect",
+    "sqlite_connect",
+]
+
 db = Proxy()
 
 
@@ -111,8 +120,8 @@ def psql_connect(host=None, database=None, user=None, password=None, port=5432):
     """
     if is_b64(password):
         password = b64decode(password)
-    mysql = PostgresqlDatabase(database, user=user, password=password, host=host, port=port)
-    db.initialize(mysql)
+    psql = PostgresqlDatabase(database, user=user, password=password, host=host, port=port)
+    db.initialize(psql)
 
     return db
 

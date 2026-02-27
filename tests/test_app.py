@@ -2,7 +2,9 @@
 
 import os
 import tempfile
+from unittest.mock import MagicMock, patch
 
+from reliqua.api import Api
 from reliqua.app import load_config, update_dict
 
 
@@ -89,4 +91,60 @@ class TestLoadConfig:
             f.flush()
             result = load_config(f.name)
         os.unlink(f.name)
-        assert result == {}
+        assert not result
+
+
+class TestCorsOptions:
+    """Tests for configurable CORS options passed to Api."""
+
+    _patches = (
+        "reliqua.api.Api._add_docs",
+        "reliqua.api.Api._add_routes",
+        "reliqua.api.Api._parse_docstrings",
+        "reliqua.api.Api._load_resources",
+        "reliqua.api.Api._add_handlers",
+        "falcon.App.__init__",
+    )
+
+    @patch(_patches[0])
+    @patch(_patches[1])
+    @patch(_patches[2])
+    @patch(_patches[3])
+    @patch(_patches[4])
+    @patch(_patches[5], return_value=None)
+    @patch("reliqua.api.CORS")
+    def test_default_cors_options(self, mock_cors, *_mocks):
+        """When no cors_options given, default allow-all should be used."""
+        mock_cors.return_value.middleware = MagicMock()
+        Api(
+            resource_path="/tmp",
+            middleware=[],
+            openapi={"path": "/docs", "ui_url": "", "servers": []},
+        )
+        mock_cors.assert_called_once_with(
+            allow_all_origins=True,
+            allow_all_methods=True,
+            allow_all_headers=True,
+        )
+
+    @patch(_patches[0])
+    @patch(_patches[1])
+    @patch(_patches[2])
+    @patch(_patches[3])
+    @patch(_patches[4])
+    @patch(_patches[5], return_value=None)
+    @patch("reliqua.api.CORS")
+    def test_custom_cors_options(self, mock_cors, *_mocks):
+        """Custom cors_options should be forwarded to CORS()."""
+        mock_cors.return_value.middleware = MagicMock()
+        custom = {"allow_all_origins": False, "allow_origins_list": ["https://example.com"]}
+        Api(
+            resource_path="/tmp",
+            middleware=[],
+            openapi={"path": "/docs", "ui_url": "", "servers": []},
+            cors_options=custom,
+        )
+        mock_cors.assert_called_once_with(
+            allow_all_origins=False,
+            allow_origins_list=["https://example.com"],
+        )

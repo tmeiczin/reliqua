@@ -27,8 +27,12 @@ def http(code):
     """Return HTTP as string."""
     try:
         return f"{int(code)} {CODES[str(code)]}"
-    except ValueError:
-        return f"{MESSAGES[code.upper()]} {code}"
+    except (ValueError, KeyError):
+        key = str(code).upper().replace(" ", "_")
+        status_code = MESSAGES.get(key)
+        if status_code is None:
+            return "500 Internal Server Error"
+        return f"{status_code} {code}"
 
 
 HTTP = http

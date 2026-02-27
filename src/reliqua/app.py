@@ -5,6 +5,7 @@ Copyright 2016-2024.
 """
 
 import configparser
+import logging
 
 from gunicorn.app.base import BaseApplication
 
@@ -41,26 +42,18 @@ INFO_DEFAULTS = {
 }
 
 
-def update_dict(a, b):
+def update_dict(overrides, defaults):
     """
-    Update dictionary a with values from dictionary b.
+    Merge user overrides into a defaults dictionary.
 
-    Update dictionary a with values from dictionary b. Remove
-    keys from a that are not in b.
+    Return a new dictionary containing only keys defined in `defaults`,
+    with values from `overrides` taking precedence when present.
 
-    :param dict a:  Dictionary to update
-    :param dict b:  Dictionary with new values
-    :return dict:   Updated dictionary
+    :param dict overrides:  User-supplied values
+    :param dict defaults:   Default values (also defines valid keys)
+    :return dict:           Merged dictionary
     """
-    # Create a new dictionary with keys from a that are also in b
-    updated_dict = {key: a[key] for key in a if key in b}
-
-    # Add keys from b that are not in a
-    for key in b:
-        if key not in updated_dict:
-            updated_dict[key] = b[key]
-
-    return updated_dict
+    return {key: overrides.get(key, defaults[key]) for key in defaults}
 
 
 def load_config(config_file):
@@ -80,8 +73,7 @@ def load_config(config_file):
         for option in config.options(section):
             params[option] = config.get(section, option)
     except (TypeError, configparser.Error) as e:
-        # Log the error or handle it appropriately
-        print(f"Error loading config file: {e}")
+        logging.getLogger(__name__).error("Error loading config file: %s", e)
 
     return params
 
@@ -98,7 +90,7 @@ class Application(BaseApplication):
         info=None,
         openapi=None,
         gunicorn=None,
-        **_kwargs,
+        cors_options=None,
     ):
         """
         Create Application instance.
@@ -110,6 +102,7 @@ class Application(BaseApplication):
         :param str info:                  Application information
         :param str openapi:               OpenAPI configuration options
         :param dict gunicorn:             Gunicorn configuration options
+        :param dict cors_options:         CORS configuration options for falcon-cors
 
         :return:                          Application instance
         """
@@ -117,6 +110,11 @@ class Application(BaseApplication):
         gunicorn = gunicorn or {}
         openapi = openapi or {}
         info = info or {}
+
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(message)s",
+        )
 
         resource_path = resource_path or ""
         resource_attributes = resource_attributes or {}
@@ -142,7 +140,11 @@ class Application(BaseApplication):
             resource_attributes=resource_attributes,
             openapi=openapi,
             info=info,
+            cors_options=cors_options,
         )
+
+        logger = logging.getLogger(__name__)
+        logger.info("listening on %s", bind)
 
         super().__init__()
 

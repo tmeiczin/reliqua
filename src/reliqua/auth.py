@@ -9,6 +9,23 @@ import re
 
 import falcon
 
+__all__ = [
+    "AccessCallback",
+    "AccessControl",
+    "AccessList",
+    "AccessMap",
+    "AccessResource",
+    "ApiAuthentication",
+    "AuthMiddleware",
+    "AuthenticationContext",
+    "BasicAuthentication",
+    "BearerAuthentication",
+    "CookieAuthentication",
+    "HeaderAuthentication",
+    "MultiAuthentication",
+    "QueryAuthentication",
+]
+
 
 def is_base64(data):
     """
@@ -55,7 +72,7 @@ class AccessControl:
 
     The `authorized` method returns whether the client is authorized
     to execute the call. The authorized takes an `AuthenticationContext`
-    which may have implentation specific details.
+    which may have implementation specific details.
     """
 
     def authorized(self, context, _route, _method, _resource):
@@ -138,8 +155,20 @@ class AccessList(AccessControl):
         self.default_mode = default_mode
 
     def authorized(self, context, _route, _method, _resource):
-        """Return whether client is allowed to access resource."""
-        raise NotImplementedError("authorized method not implemented")
+        """
+        Return whether client is allowed to access resource.
+
+        AccessList does not perform role-based authorization.
+        If the request reached this point, it passed authentication,
+        so access is granted.
+
+        :param object context:  Authentication context
+        :param str _route:      Route being called
+        :param str _method:     HTTP method invoked
+        :param Resource _resource:  Route resource
+        :return bool:           Always True (authorization is implicit)
+        """
+        return True
 
     def authentication_required(self, route, method, _resource):
         """
@@ -153,7 +182,6 @@ class AccessList(AccessControl):
         :return bool:        True if authentication is required
         """
         matched = False
-        required = self.default_mode != "allowed"
 
         if route.lower() in self.routes or method.lower() in self.methods:
             matched = True
@@ -174,7 +202,7 @@ class AccessMap(AccessControl):
     Access Map.
 
     Access control is checked by the routes and/or method specified in the
-    the dictionary. Only items defined will be checked and everything else will
+    dictionary. Only items defined will be checked and everything else will
     be denied. Therefore, this must be a complete map.
 
     The access map follows the form:
@@ -197,7 +225,7 @@ class AccessMap(AccessControl):
 
     def __init__(self, access_map):
         """
-        Create the AccessList instance.
+        Create the AccessMap instance.
 
         :param list access_map:    Dictionary of rules
         :return:
@@ -274,7 +302,7 @@ class AccessResource(AccessControl):
 
     def __init__(self, default_mode="deny", raise_on_undefined=False):
         """
-        Create the AccessList instance.
+        Create the AccessResource instance.
 
         :param str default_mode:         Default mode (allow|deny)
         :param bool raise_on_undefined:  If a resource has undefined auth attributes, raise exception
@@ -351,7 +379,7 @@ class ApiAuthentication(Authentication):
     An abstract base class for API key type authentications.
     """
 
-    location = " any"
+    location = "any"
 
     def __init__(self, name, description=None, validation=None):
         """
@@ -710,7 +738,7 @@ class AuthMiddleware:
         # authenticate user
         auth = self.authenticate(req, resp, resource)
 
-        # if an auth contecxt is returned check if authorized
+        # if an auth context is returned check if authorized
         if auth:
             authorized = self.control.authorized(auth, req.uri_template, req.method, resource)
             if not authorized:

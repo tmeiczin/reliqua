@@ -5,7 +5,13 @@ from unittest.mock import MagicMock
 import falcon
 import pytest
 
-from reliqua.middleware import Converter, Parameter, ProcessParams, python_type, to_bool
+from reliqua.middleware import (
+    Converter,
+    Parameter,
+    ProcessParams,
+    python_type,
+    to_bool,
+)
 
 
 class TestToBool:
@@ -73,8 +79,8 @@ class TestParameter:
 
     def test_kwargs_update(self):
         p = Parameter(name="test", datatype="str", required=True, default="hello")
-        assert p.name == "test"
-        assert p.datatype == "str"
+        assert p.name == "test"  # pylint: disable=no-member
+        assert p.datatype == "str"  # pylint: disable=no-member
         assert p.required is True
         assert p.default == "hello"
 
@@ -143,7 +149,7 @@ class TestConverter:
         assert result == ["a", "b"]
 
 
-class TestProcessParams:
+class TestProcessParams:  # pylint: disable=protected-access
     """Tests for the ProcessParams middleware."""
 
     def test_check_required_raises_on_missing(self):

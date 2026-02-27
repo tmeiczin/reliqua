@@ -6,7 +6,7 @@ from reliqua.sphinx_parser import SphinxParser
 def make_method(docstring):
     """Create a function with the given docstring for testing."""
 
-    def on_get(self, _req, _resp):
+    def on_get(_self, _req, _resp):
         pass
 
     on_get.__doc__ = docstring
@@ -174,7 +174,7 @@ class TestSphinxParserParse:
 
         for verb in ["get", "post", "put", "patch", "delete"]:
 
-            def method(self):
+            def method(_self):
                 """Test."""
 
             method.__qualname__ = f"Res.on_{verb}"
@@ -185,7 +185,7 @@ class TestSphinxParserParse:
     def test_parse_suffix_detection(self):
         parser = SphinxParser()
 
-        def method(self):
+        def method(_self):
             r"""Test.\n\n:return json:"""
 
         method.__qualname__ = "Res.on_get_by_id"

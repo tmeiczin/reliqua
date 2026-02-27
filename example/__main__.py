@@ -1,12 +1,19 @@
 """
-Reliqua Framework.
+Reliqua Example Application.
+
+Demonstrates application setup with:
+- Multiple authentication backends (Basic + Cookie) via MultiAuthentication
+- Per-resource authorization via AccessResource (deny-by-default)
+- CLI argument parsing with config file fallback
+- Custom resource attributes and app config passthrough
+- OpenAPI metadata and server configuration
+- Gunicorn worker configuration
 
 Copyright 2016-2024.
 """
 
 import argparse
 import os
-import sys
 
 from reliqua import Application, load_config
 from reliqua.auth import (
@@ -17,63 +24,106 @@ from reliqua.auth import (
     CookieAuthentication,
 )
 
+# ---------------------------------------------------------------------------
+# Authentication callbacks
+# ---------------------------------------------------------------------------
+# Each callback receives credentials and returns an AuthenticationContext
+# on success or None on failure. The context carries identity and role info
+# that the authorization layer uses for access decisions.
+# ---------------------------------------------------------------------------
 
-def check_user(username, _password):
-    """Return if user is authenticated."""
-    if username == "ted":
-        return AuthenticationContext(user="ted", role="admin")
+
+def validate_basic_credentials(username, _password):
+    """Validate HTTP Basic credentials.
+
+    BasicAuthentication calls this with (username, password) extracted from
+    the Authorization header. Return an AuthenticationContext on success.
+
+    Demonstrates:
+        - Returning different roles based on identity
+        - Setting arbitrary attributes (user, role) on the context
+    """
+    known_users = {
+        "admin": "admin",
+        "viewer": "viewer",
+    }
+    role = known_users.get(username)
+    if role:
+        return AuthenticationContext(user=username, role=role)
 
     return None
 
 
-def check_api_key(api_key):
-    """Return if user is authenticated."""
-    if api_key == "abc123":
-        return AuthenticationContext(name="ted", role="admin")
+def validate_cookie_api_key(api_key):
+    """Validate an API key from a cookie.
 
-    return None
+    CookieAuthentication calls this with the cookie value.
+    Return an AuthenticationContext on success.
+
+    Demonstrates:
+        - Token-based authentication
+        - Setting name and role on the context
+    """
+    valid_keys = {
+        "abc123": AuthenticationContext(name="api-service", role="admin"),
+        "read-only": AuthenticationContext(name="reader", role="viewer"),
+    }
+    return valid_keys.get(api_key)
+
+
+# ---------------------------------------------------------------------------
+# Application entry point
+# ---------------------------------------------------------------------------
 
 
 def main():
-    """Execute main method."""
-    bind_address = "127.0.0.1"
-    bind_port = 8000
-    workers = 2
-    parser = argparse.ArgumentParser()
-    resource_path = os.path.abspath(os.path.dirname(sys.modules[__name__].__file__)) + "/resources"
+    """Start the example application."""
+    parser = argparse.ArgumentParser(description="Reliqua Example API Server")
+    resource_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources")
 
-    parser.add_argument(
-        "--address",
-        help="API bind address to listen for requests",
-        default=bind_address,
-    )
-    parser.add_argument("--port", help="Bind port to listen for requests", default=bind_port)
-    parser.add_argument("--ui-url", help="OpenAPI UI URL (ie Swagger index) default is address:port")
-    parser.add_argument("--docs", help="Docs", default="/docs")
-    parser.add_argument("--server", help="Additional server(s) usable in the API docs", nargs="*")
-    parser.add_argument("--resource-path", help="Path to API resource modules", default=resource_path)
-    parser.add_argument("--workers", help="Number of worker threads", default=workers)
-    parser.add_argument("--config", help="Configuration file", default=None)
-
-    basic_auth = BasicAuthentication(
-        validation=check_user,
-    )
-    cookie_auth = CookieAuthentication(
-        "api_key",
-        validation=check_api_key,
-    )
-
-    auth = AuthMiddleware([basic_auth, cookie_auth], control=AccessResource(default_mode="deny"))
-
+    parser.add_argument("--address", help="Bind address", default="127.0.0.1")
+    parser.add_argument("--port", help="Bind port", type=int, default=8000)
+    parser.add_argument("--ui-url", help="Public URL for OpenAPI UI (e.g., behind a proxy)")
+    parser.add_argument("--docs", help="Docs URL path", default="/docs")
+    parser.add_argument("--server", help="Additional OpenAPI server URLs", nargs="*")
+    parser.add_argument("--resource-path", help="Path to resource modules", default=resource_path)
+    parser.add_argument("--workers", help="Number of Gunicorn workers", type=int, default=2)
+    parser.add_argument("--config", help="INI configuration file path", default=None)
     args = parser.parse_args()
 
-    servers = [{"url": x, "description": ""} for x in args.server] if args.server else []
-    middleware = [auth]
+    # -----------------------------------------------------------------------
+    # Optional: load config file and merge with CLI args
+    # -----------------------------------------------------------------------
+    # Demonstrates load_config() which reads a [config] section from an INI file.
     if args.config:
-        config = load_config(args.config)
-        for k, v in config.items():
-            if getattr(args, k, None):
-                setattr(args, k, v)
+        file_config = load_config(args.config)
+        for key, value in file_config.items():
+            if getattr(args, key, None):
+                setattr(args, key, value)
+
+    # -----------------------------------------------------------------------
+    # Authentication setup
+    # -----------------------------------------------------------------------
+    # Demonstrates:
+    #   BasicAuthentication  — HTTP Basic (Authorization header)
+    #   CookieAuthentication — API key stored in a cookie
+    #   AuthMiddleware       — tries authenticators in order (first success wins)
+    #   AccessResource       — reads __auth__ on each resource for role-based access;
+    #                          default_mode="deny" means everything requires auth
+    #                          unless the resource sets no_auth=True or __auth__
+    #                          grants access via wildcard roles.
+    basic_auth = BasicAuthentication(validation=validate_basic_credentials)
+    cookie_auth = CookieAuthentication("api_key", validation=validate_cookie_api_key)
+
+    auth_middleware = AuthMiddleware(
+        [basic_auth, cookie_auth],
+        control=AccessResource(default_mode="deny"),
+    )
+
+    # -----------------------------------------------------------------------
+    # Gunicorn, info, and OpenAPI configuration
+    # -----------------------------------------------------------------------
+    servers = [{"url": url, "description": ""} for url in args.server] if args.server else []
 
     gunicorn = {
         "bind": f"{args.address}:{args.port}",
@@ -83,11 +133,11 @@ def main():
     }
 
     info = {
-        "title": "Reliqua Example",
+        "title": "Reliqua Example API",
         "version": "1.0.0",
-        "description": "Example API",
-        "license": "3-Clause BSD License",
-        "license_url": "https://opensource.org/license/bsd-3-clause",
+        "description": "Comprehensive example demonstrating all Reliqua features",
+        "license": "MIT License",
+        "license_url": "https://opensource.org/license/mit",
         "contact_name": "Terrence Meiczinger",
     }
 
@@ -95,14 +145,23 @@ def main():
         "highlight": True,
         "sort": "alpha",
         "ui_url": args.ui_url,
+        "docs": args.docs,
         "servers": servers,
     }
 
+    # -----------------------------------------------------------------------
+    # Create and run the application
+    # -----------------------------------------------------------------------
+    # Demonstrates:
+    #   resource_path       — auto-discovers all Resource subclasses in this directory
+    #   middleware           — auth middleware is applied to every request
+    #   config              — accessible in resources via self.app_config
+    #   resource_attributes — every resource gets self.version set automatically
     app = Application(
         resource_path=args.resource_path,
-        middleware=middleware,
+        middleware=[auth_middleware],
         config=vars(args),
-        resource_attributes={"random": "example"},
+        resource_attributes={"version": "1.0.0"},
         info=info,
         openapi=openapi,
         gunicorn=gunicorn,
