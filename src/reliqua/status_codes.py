@@ -92,4 +92,4 @@ CODES = {
     "511": "Network Authentication Required",
 }
 
-MESSAGES = {(v.upper().replace(" ", "_"), k) for k, v in CODES.items()}
+MESSAGES = {v.upper().replace(" ", "_"): k for k, v in CODES.items()}

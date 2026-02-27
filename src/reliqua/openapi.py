@@ -245,7 +245,7 @@ class Response:
         self.code = code
         self.description = description
         self.content = content
-        self.schema = schema if schema else "default_response"
+        self.schema = schema or "default_response"
 
     def __repr__(self):
         """Return a printable representational string."""
@@ -319,7 +319,7 @@ class Operation:
 
     def binary_body(self):
         """Return binary body."""
-        accepts = CONTENT_MAP.get(self.accepts)
+        accepts = CONTENT_MAP.get(self.accepts[0]) if self.accepts else "application/octet-stream"
         return {
             "content": {
                 accepts: {
@@ -355,7 +355,7 @@ class Operation:
 
     def request_body(self):
         """Return request body."""
-        if self.accepts in BINARY_TYPES:
+        if any(a in BINARY_TYPES for a in self.accepts):
             return self.binary_body()
 
         return self.body()

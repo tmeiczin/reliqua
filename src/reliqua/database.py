@@ -27,6 +27,8 @@ def is_b64(string):
     :return:        True if string is base64 encoded
     """
     try:
+        if isinstance(string, str):
+            string = string.encode("utf-8")
         return b64encode(b64decode(string)) == string
     except (ValueError, TypeError, binascii.Error):
         return False

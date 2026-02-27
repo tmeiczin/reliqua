@@ -133,8 +133,8 @@ class AccessList(AccessControl):
         :param list methods:       List of methods to apply rules
         :param str default_mode:   Default mode (allow|deny)
         """
-        self.routes = [x.lower() for x in routes]
-        self.methods = [x.lower() for x in methods]
+        self.routes = [x.lower() for x in (routes or [])]
+        self.methods = [x.lower() for x in (methods or [])]
         self.default_mode = default_mode
 
     def authorized(self, context, _route, _method, _resource):
@@ -161,10 +161,10 @@ class AccessList(AccessControl):
         # check if authentication is required
         if self.default_mode == "allow":
             # if default mode is allow, then a match means auth required
-            required = not matched
+            required = matched
         else:
             # default mode is deny, then a match means auth not required
-            required = matched
+            required = not matched
 
         return required
 
@@ -213,8 +213,10 @@ class AccessMap(AccessControl):
         :param str method:      HTTP method being invoked
         :return bool:           True if authorized
         """
-        route = self.access_map.get(route)
-        roles = route.get("*") or route.get(method)
+        entry = self.access_map.get(route)
+        if not entry:
+            return False
+        roles = entry.get("*") or entry.get(method) or []
         if context.role in roles or "*" in roles:
             return True
 
@@ -229,10 +231,12 @@ class AccessMap(AccessControl):
 
         :param str route:    The route being called
         :param str method:   The http method invoked
-        :return bool:        True if e
+        :return bool:        True if authentication is required
         """
-        route = self.access_map.get(route)
-        roles = route.get("*") or route.get(method)
+        entry = self.access_map.get(route)
+        if not entry:
+            return True
+        roles = entry.get("*") or entry.get(method)
 
         # if method is specified and has a wildcard role
         # then authentication is not required
@@ -289,13 +293,13 @@ class AccessResource(AccessControl):
         :return bool:                True if authorized
         """
         auth = getattr(resource, "__auth__", {})
-        roles = auth.get("*", []) or auth.get(method, [])
+        roles = auth.get("*", []) or auth.get(method.upper(), []) or auth.get(method.lower(), [])
 
         # if no roles are defined skip authorization
         # or raise an exception
         if not roles:
             if self.raise_on_undefined:
-                raise falcon.HTTPNotImplemented(f"no roles are defined for {resource.name} {method}")
+                raise falcon.HTTPNotImplemented(description=f"no roles are defined for {resource.name} {method}")
 
             return True
 

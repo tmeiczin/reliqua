@@ -36,7 +36,7 @@ def check_api_key(api_key):
 
 def main():
     """Execute main method."""
-    bind_address = "127.0.0.01"
+    bind_address = "127.0.0.1"
     bind_port = 8000
     workers = 2
     parser = argparse.ArgumentParser()
@@ -50,7 +50,7 @@ def main():
     parser.add_argument("--port", help="Bind port to listen for requests", default=bind_port)
     parser.add_argument("--ui-url", help="OpenAPI UI URL (ie Swagger index) default is address:port")
     parser.add_argument("--docs", help="Docs", default="/docs")
-    parser.add_argument("--server", help="Additional server(s) usable in the API docs", nargs="*", action="append")
+    parser.add_argument("--server", help="Additional server(s) usable in the API docs", nargs="*")
     parser.add_argument("--resource-path", help="Path to API resource modules", default=resource_path)
     parser.add_argument("--workers", help="Number of worker threads", default=workers)
     parser.add_argument("--config", help="Configuration file", default=None)
@@ -100,14 +100,12 @@ def main():
 
     app = Application(
         resource_path=args.resource_path,
-        loglevel="info",
-        accesslog=None,
         middleware=middleware,
         config=vars(args),
         resource_attributes={"random": "example"},
         info=info,
         openapi=openapi,
-        gunicorn_options=gunicorn,
+        gunicorn=gunicorn,
     )
     app.run()
 

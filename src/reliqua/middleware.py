@@ -4,6 +4,7 @@ Reliqua Framework.
 Copyright 2016-2024.
 """
 
+import builtins
 import json
 import re
 
@@ -51,7 +52,7 @@ TRANSFORMS = {
 
 def python_type(s):
     """Return Python type from string."""
-    return __builtins__.get(s)
+    return getattr(builtins, s, None)
 
 
 class Parameter:
@@ -185,7 +186,7 @@ class Converter:
         :param transform:       Function to transform the list items
         :return:                Converted parameter value
         """
-        Converter.as_list(req, name, default=default, required=required, transform=transform)
+        return Converter.as_list(req, name, default=default, required=required, transform=transform)
 
     @staticmethod
     def convert(req, parameter, transform=None):
@@ -236,8 +237,8 @@ class ProcessParams:
         :return:                        None
         :raises falcon.HTTPBadRequest:  Falcon bad request exception
         """
-        value = parameter.default or request.params.get(parameter.name)
-        if parameter.required and not value:
+        value = parameter.default if parameter.default is not None else request.params.get(parameter.name)
+        if parameter.required and value is None:
             raise falcon.HTTPBadRequest(
                 title="Bad Request",
                 description=f"Missing parameter '{parameter.name}'",
