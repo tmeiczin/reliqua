@@ -25,6 +25,7 @@ SOFTWARE.
 import glob
 import importlib
 import inspect
+import logging
 import os
 import re
 import sys
@@ -41,6 +42,8 @@ from .resources.base import Resource
 from .sphinx_parser import SphinxParser
 from .swagger import Swagger
 
+logger = logging.getLogger(__name__)
+
 
 class Api(falcon.App):
     """Add auto route and documentation."""
@@ -53,7 +56,7 @@ class Api(falcon.App):
         resource_attributes=None,
         info=None,
         openapi=None,
-        **_kwargs,
+        cors_options=None,
     ):
         """
         Create an API instance.
@@ -80,6 +83,7 @@ class Api(falcon.App):
         self.openapi["spec"] = f"{openapi_path}/openapi.json"
         self.openapi["static"] = f"{openapi_path}/static"
         self.resources = []
+        self._parser = SphinxParser()
         self.auth = [x for x in middleware if isinstance(x, AuthMiddleware)]
         self.config = config or {}
         self.resource_attributes = resource_attributes or {}
@@ -90,7 +94,12 @@ class Api(falcon.App):
         self.openapi["static_url"] = f"{self.url}{self.openapi['static']}"
 
         middleware = middleware or []
-        cors = CORS(allow_all_origins=True, allow_all_methods=True, allow_all_headers=True)
+        cors_options = cors_options or {
+            "allow_all_origins": True,
+            "allow_all_methods": True,
+            "allow_all_headers": True,
+        }
+        cors = CORS(**cors_options)
         middleware.append(cors.middleware)
 
         super().__init__(middleware=middleware)
@@ -122,11 +131,11 @@ class Api(falcon.App):
         """Load resource classes from the specified resource path."""
         resources = []
         path = f"{self.resource_path}/*.py"
-        print(f"searching {path}")
+        logger.info("searching %s", path)
         files = glob.glob(path)
 
         for file in files:
-            print(f"loading {file}")
+            logger.info("loading %s", file)
             classes = self._get_classes(file)
             resources.extend(classes)
 
@@ -145,12 +154,14 @@ class Api(falcon.App):
 
     def _parse_methods(self, resource, route, methods):
         """Parse methods of a resource for a given route."""
-        parser = SphinxParser()
         for name in methods:
             operation_id = f"{resource.__class__.__name__}.{name}"
-            action = re.search(r"on_(delete|get|patch|post|put)", name).group(1)
+            match = re.search(r"on_(delete|get|patch|post|put)", name)
+            if not match:
+                continue
+            action = match.group(1)
             method = getattr(resource, name)
-            resource.__data__[route][action] = parser.parse(method, operation_id=operation_id)
+            resource.__data__[route][action] = self._parser.parse(method, operation_id=operation_id)
 
     def _parse_resource(self, resource):
         """Parse a resource to extract routes and methods."""
@@ -175,7 +186,7 @@ class Api(falcon.App):
         try:
             spec.loader.exec_module(module)
         except (ImportError, FileNotFoundError, SyntaxError, TypeError, AttributeError) as e:
-            print(f"Error loading module {module_name}: {e}")
+            logger.error("Error loading module %s: %s", module_name, e)
             return classes
 
         for _, c in inspect.getmembers(module, inspect.isclass):
@@ -202,8 +213,8 @@ class Api(falcon.App):
         openapi = OpenApi(**self.info, auth=self.auth, servers=self.servers)
         openapi.process_resources(self.resources)
         schema = openapi.schema()
-        print(f"adding static route {self.openapi['docs']} {self.openapi['file_path']}")
+        logger.info("adding static route %s %s", self.openapi["docs"], self.openapi["file_path"])
         self.add_static_route(self.openapi["static"], self.openapi["file_path"])
         self.add_route(self.openapi["docs"], swagger)
-        print(f"adding openapi file {self.openapi['spec']}")
+        logger.info("adding openapi file %s", self.openapi["spec"])
         self.add_route(self.openapi["spec"], Docs(schema))

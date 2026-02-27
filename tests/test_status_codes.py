@@ -60,3 +60,19 @@ class TestCodes:
         assert CODES["200"] == "OK"
         assert CODES["404"] == "Not Found"
         assert CODES["500"] == "Internal Server Error"
+
+
+class TestHttpFallback:
+    """Tests for http() graceful fallback behavior."""
+
+    def test_unknown_numeric_code_returns_500(self):
+        """Unknown numeric codes should fall back to 500."""
+        assert http(999) == "500 Internal Server Error"
+
+    def test_unknown_string_code_returns_500(self):
+        """Unknown string codes should fall back to 500."""
+        assert http("TOTALLY_BOGUS") == "500 Internal Server Error"
+
+    def test_garbage_input_returns_500(self):
+        """Non-numeric, non-message strings should fall back to 500."""
+        assert http("not a code") == "500 Internal Server Error"

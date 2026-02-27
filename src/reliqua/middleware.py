@@ -10,6 +10,13 @@ import re
 
 import falcon
 
+__all__ = [
+    "Converter",
+    "Parameter",
+    "ProcessParams",
+    "to_bool",
+]
+
 
 def to_bool(value):
     """
@@ -210,7 +217,6 @@ class Converter:
 
         converter = getattr(Converter, f"as_{parameter.datatype}", Converter.as_str)
         transform = TRANSFORMS.get(transform, str)
-        print(f"transform: {transform}")
         default = transform(parameter.default) if transform and parameter.default else None
 
         return converter(
@@ -243,9 +249,6 @@ class ProcessParams:
                 title="Bad Request",
                 description=f"Missing parameter '{parameter.name}'",
             )
-
-    def _convert(self, request, parameter):
-        pass
 
     def _parse_operators(self, request):
         operators = {}

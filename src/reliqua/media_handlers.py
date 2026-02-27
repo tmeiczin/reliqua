@@ -14,6 +14,12 @@ from falcon.media import BaseHandler
 from falcon.media import JSONHandler as FalconJSONHandler
 from yaml import SafeLoader
 
+__all__ = [
+    "JSONHandler",
+    "TextHandler",
+    "YAMLHandler",
+]
+
 
 class YAMLHandler(BaseHandler):
     """Media handler class for YAML."""

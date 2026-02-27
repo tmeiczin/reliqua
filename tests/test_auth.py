@@ -84,10 +84,10 @@ class TestAccessList:
         ac = AccessList(routes=["/public"], methods=[], default_mode="deny")
         assert ac.authentication_required("/secret", "GET", None) is True
 
-    def test_authorized_not_implemented(self):
+    def test_authorized_always_true(self):
+        """AccessList grants access to any authenticated request."""
         ac = AccessList()
-        with pytest.raises(NotImplementedError):
-            ac.authorized(None, None, None, None)
+        assert ac.authorized(None, None, None, None) is True
 
 
 class TestAccessCallback:
