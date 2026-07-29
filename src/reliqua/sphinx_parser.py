@@ -8,7 +8,7 @@ import inspect
 import re
 
 PARAM_REGEX = re.compile(
-    r":param\s+(?P<datatype>[\[\]|\w]+)\s+(?P<name>[\S+]+):\s+(\[(?P<options>.*)\])?\s+(?P<description>.*)"
+    r":param\s+(?P<datatype>[\[\]|\w]+)\s+(?P<name>[\S+]+):\s+(\[(?P<options>.*)\])?[.\s]*(?P<description>.*)"
 )
 PARAM_ITER_REGEX = re.compile(
     r"^(:param.*?:.*?)(?:(?=:param)|(?=:return)|(?=:response)|(?=:accepts))",
@@ -17,7 +17,7 @@ PARAM_ITER_REGEX = re.compile(
 RESPONSE_ITER_REGEX = re.compile(r":response\s+(?P<code>\d+)\s*(?P<schema>\w+)?:\s+(?P<description>.*)")
 RETURN_REGEX = re.compile(r":return[s]*\s*(\[(.*?)\]|\w+)")
 ACCEPT_REGEX = re.compile(r":accepts\s*(\[(.*?)\]|\w+)")
-KEYVALUE_REGEX = re.compile(r"(?P<key>\w+)=(?P<value>\S+)")
+KEYVALUE_REGEX = re.compile(r"(?P<key>\w+)=(?P<value>[^\s,]+)")
 OPERATION_REGEX = re.compile(r"on_(delete|get|patch|post|put)")
 SUFFIX_REGEX = re.compile(r"on_(?:delete|get|patch|post|put)_([a-zA-Z0-9_]+)")
 

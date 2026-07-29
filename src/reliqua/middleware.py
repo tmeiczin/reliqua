@@ -59,7 +59,10 @@ TRANSFORMS = {
 
 def python_type(s):
     """Return Python type from string."""
-    return getattr(builtins, s, None)
+    aliases = {
+        "boolean": "bool",
+    }
+    return getattr(builtins, aliases.get(s, s), None)
 
 
 class Parameter:
@@ -111,7 +114,7 @@ class Converter:
         :param bool required:   ``True`` if the parameter is required else ``False``
         :return float:          Converted parameter value
         """
-        default = float(default) if default else None
+        default = float(default) if default is not None else None
         return req.get_param_as_float(name, default=default, required=required)
 
     @staticmethod
@@ -125,7 +128,7 @@ class Converter:
         :param bool required:   ``True`` if the parameter is required else ``False``
         :return int:            Converted parameter value
         """
-        default = int(default) if default else None
+        default = int(default) if default is not None else None
         return req.get_param_as_int(name, default=default, required=required)
 
     @staticmethod
@@ -140,6 +143,8 @@ class Converter:
         :return bool:           Converted parameter value
         """
         return req.get_param_as_bool(name, default=default, required=required)
+
+    as_boolean = as_bool
 
     @staticmethod
     def as_object(req, name, default=None, required=False, **_kwargs):
@@ -217,7 +222,7 @@ class Converter:
 
         converter = getattr(Converter, f"as_{parameter.datatype}", Converter.as_str)
         transform = TRANSFORMS.get(transform, str)
-        default = transform(parameter.default) if transform and parameter.default else None
+        default = transform(parameter.default) if transform and parameter.default is not None else None
 
         return converter(
             req,
@@ -307,7 +312,7 @@ class ProcessParams:
             self._check_required(request, parameter)
 
             # if parameter is not required, not specified, and has no default, move on
-            if not present and not parameter.default:
+            if not present and parameter.default is None:
                 continue
 
             # for operators in and between, datatype must be a list

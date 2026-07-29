@@ -4,7 +4,40 @@ Reliqua Framework.
 Copyright 2016-2024.
 """
 
+import json
 import re
+
+from reliqua.middleware import to_bool
+
+
+def _convert_default(value, datatype):
+    """
+    Convert default string value to the appropriate Python type.
+
+    :param str value:       Default value as string
+    :param str datatype:    Parameter datatype
+    :return:                Converted value
+    """
+    if value is None:
+        return None
+
+    base_type = re.sub(r"\[.*\]", "", datatype)
+    converters = {
+        "str": str,
+        "string": str,
+        "int": int,
+        "integer": int,
+        "float": float,
+        "number": float,
+        "bool": to_bool,
+        "boolean": to_bool,
+        "object": json.loads,
+    }
+    converter = converters.get(base_type)
+    if converter and isinstance(value, str):
+        return converter(value)
+
+    return value
 
 
 def camelcase(string):
@@ -110,7 +143,7 @@ class Parameter:
         self.name = name
         self.location = location or "query"
         self.required = required
-        self.default = default
+        self.default = _convert_default(default, datatype) if datatype else default
         self.enum = enum
         self.description = description
         self.explode = explode
@@ -165,7 +198,8 @@ class Parameter:
         if self.items_type:
             _schema["items"] = {"type": self.items_type}
         for x in ["enum", "min", "max", "default", "examples"]:
-            if value := getattr(self, x):
+            value = getattr(self, x)
+            if value is not None:
                 _schema[x] = value
 
         if self.in_request_body():
