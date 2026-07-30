@@ -194,9 +194,20 @@ class Parameter:
     @property
     def schema(self):
         """Return parameter schema."""
-        _schema = {"type": self.datatype}
-        if self.items_type:
-            _schema["items"] = {"type": self.items_type}
+        # Handle union types (e.g., "string|integer") by using oneOf
+        if "|" in (self.datatype or ""):
+            types = (self.datatype or "").split("|")
+            one_of = []
+            for t in types:
+                subschema = {"type": t}
+                if self.items_type and t == "array":
+                    subschema["items"] = {"type": self.items_type}
+                one_of.append(subschema)
+            _schema = {"oneOf": one_of}
+        else:
+            _schema = {"type": self.datatype}
+            if self.items_type:
+                _schema["items"] = {"type": self.items_type}
         for x in ["enum", "min", "max", "default", "examples"]:
             value = getattr(self, x)
             if value is not None:
@@ -481,7 +492,8 @@ class ResourceSchema:
         """
         for parameter in operation["parameters"]:
             enum = parameter.get("enum")
-            parameter["enum"] = getattr(self.resource, enum) if enum else []
+            # Only set enum when an enum name is provided; leave as None otherwise
+            parameter["enum"] = getattr(self.resource, enum) if enum else None
 
         return operation
 
